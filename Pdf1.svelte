@@ -1,10 +1,10 @@
 <script>
   import * as pdfjsLib from "pdfjs-dist";
   import pdfWorker from "pdfjs-dist/build/pdf.worker.entry";
-  import "pdfjs-dist/web/pdf_viewer.css";
   import * as pdfjsViewer from "pdfjs-dist/web/pdf_viewer";
   import { onMount } from "svelte";
   import Header from "./Header.svelte";
+  import "pdfjs-dist/web/pdf_viewer.css";
 
   export let url;
 
@@ -22,11 +22,11 @@
 
   const zoomin = () => {
     ScaleValue += 0.1;
-    pdfViewer.currentScaleValue = ScaleValue;
+    pdfViewer.currentScale = ScaleValue;
   };
   const zoomout = () => {
     ScaleValue -= 0.1;
-    pdfViewer.currentScaleValue = ScaleValue;
+    pdfViewer.currentScale = ScaleValue;
   };
   const scaledToViewport = (scaled, viewport) => {
     const { width, height } = viewport;
@@ -92,10 +92,11 @@
       linkService: pdfLinkService
     });
 
-    pdfViewer = new pdfjsViewer.PDFViewer({
+    pdfViewer = new pdfjsViewer.PDFSinglePageViewer({
       container,
       eventBus,
       annotationLayerFactory: new pdfjsViewer.DefaultAnnotationLayerFactory(),
+      textLayerFactory: new pdfjsViewer.DefaultTextLayerFactory(),
       linkService: pdfLinkService,
       findController: pdfFindController,
       removePageBorders: true,
@@ -106,7 +107,6 @@
       renderInteractiveForms: true
     });
 
-    window.MyProperty = 12345;
 
     window.viewer = pdfViewer;
     pdfLinkService.setViewer(pdfViewer);
@@ -124,7 +124,6 @@
       numPages = pdf.numPages;
       pdfViewer.setDocument(pdf);
       pdfLinkService.setDocument(pdf, null);
-      console.log(pdfViewer.currentPageNumber)
     });
 
     globalThis.pdfViewer = pdfViewer
@@ -144,6 +143,7 @@
 
 <div class="flex flex-col w-full overflow-hidden ">
 <Header  {prev} {next} {zoomin} {zoomout} />
+
 <div class="w-full" id="viewerContainer">
   <div id="viewer" class="pdfViewer" />
 </div>

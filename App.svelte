@@ -3,7 +3,7 @@
  import Sidebar from "./Sidebar.svelte";
 
  let url =
-   "https://uploads.codesandbox.io/uploads/user/788432d2-e404-445a-9edb-09d901099290/8qUO-pdd.pdf";
+   "/assets/1.pdf";
 </script>
 
 

@@ -14,7 +14,7 @@
   let SEARCH_FOR = "book";
   let numPages = 0;
   let pdfViewer = null;
-  let ScaleValue = 1.2;
+  let ScaleValue = 1.8;
   const GetPage = async (pdfDoc, num, scale) => {
     let pg = await pdfDoc.getPage(num);
     return pg;
@@ -98,19 +98,6 @@
       linkService: pdfLinkService
     });
 
-    pdfViewer = new pdfjsViewer.PDFViewer({
-      container,
-      eventBus,
-      annotationLayerFactory: new pdfjsViewer.DefaultAnnotationLayerFactory(),
-      linkService: pdfLinkService,
-      findController: pdfFindController,
-      removePageBorders: true,
-      enableWebGL: true,
-      renderer: "svg",
-      enhanceTextSelection: true,
-      textLayerMode: 2
-    });
-
     // Fetch the PDF document from the URL using promises.
     var loadingTask = pdfjsLib.getDocument(url);
     loadingTask.promise.then(function(doc) {
@@ -126,7 +113,7 @@
                 container,
                 id: pageNum,
                 scale: ScaleValue,
-                defaultViewport: setPageScale(pdfPage), //pdfPage.getViewport({ scale: ScaleValue }),
+                defaultViewport: pdfPage.getViewport(window.screen.width / pdfPage.getViewport(1.0).width), //setPageScale(pdfPage), //pdfPage.getViewport({ scale: ScaleValue }),
                 eventBus,
                 annotationLayerFactory: new pdfjsViewer.DefaultAnnotationLayerFactory(),
                 textLayerFactory: new pdfjsViewer.DefaultTextLayerFactory(),

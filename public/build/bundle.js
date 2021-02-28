@@ -68686,12 +68686,12 @@ var app = (function () {
     			div0 = element("div");
     			attr_dev(div0, "id", "viewer");
     			attr_dev(div0, "class", "pdfViewer");
-    			add_location(div0, file$2, 147, 2, 3978);
+    			add_location(div0, file$2, 147, 2, 3968);
     			attr_dev(div1, "class", "w-full svelte-fbmnam");
     			attr_dev(div1, "id", "viewerContainer");
-    			add_location(div1, file$2, 146, 0, 3934);
+    			add_location(div1, file$2, 146, 0, 3924);
     			attr_dev(div2, "class", "flex flex-col w-full overflow-hidden ");
-    			add_location(div2, file$2, 144, 0, 3837);
+    			add_location(div2, file$2, 143, 0, 3826);
     		},
     		l: function claim(nodes) {
     			throw new Error_1("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -68750,12 +68750,12 @@ var app = (function () {
 
     	const zoomin = () => {
     		ScaleValue += 0.1;
-    		pdfViewer.currentScaleValue = ScaleValue;
+    		pdfViewer.currentScale = ScaleValue;
     	};
 
     	const zoomout = () => {
     		ScaleValue -= 0.1;
-    		pdfViewer.currentScaleValue = ScaleValue;
+    		pdfViewer.currentScale = ScaleValue;
     	};
 
     	const scaledToViewport = (scaled, viewport) => {
@@ -68814,10 +68814,11 @@ var app = (function () {
     		// (Optionally) enable find controller.
     		const pdfFindController = new pdf_viewer.PDFFindController({ eventBus, linkService: pdfLinkService });
 
-    		pdfViewer = new pdf_viewer.PDFViewer({
+    		pdfViewer = new pdf_viewer.PDFSinglePageViewer({
     				container,
     				eventBus,
     				annotationLayerFactory: new pdf_viewer.DefaultAnnotationLayerFactory(),
+    				textLayerFactory: new pdf_viewer.DefaultTextLayerFactory(),
     				linkService: pdfLinkService,
     				findController: pdfFindController,
     				removePageBorders: true,
@@ -68828,7 +68829,6 @@ var app = (function () {
     				renderInteractiveForms: true
     			});
 
-    		window.MyProperty = 12345;
     		window.viewer = pdfViewer;
     		pdfLinkService.setViewer(pdfViewer);
 
@@ -68846,7 +68846,6 @@ var app = (function () {
     			numPages = pdf.numPages;
     			pdfViewer.setDocument(pdf);
     			pdfLinkService.setDocument(pdf, null);
-    			console.log(pdfViewer.currentPageNumber);
     		});
 
     		globalThis.pdfViewer = pdfViewer;
@@ -69037,11 +69036,11 @@ var app = (function () {
     			div1 = element("div");
     			create_component(pdf.$$.fragment);
     			attr_dev(div0, "class", "w-2/12 overflow-hidden");
-    			add_location(div0, file, 10, 2, 271);
+    			add_location(div0, file, 10, 2, 191);
     			attr_dev(div1, "class", "flex-1 flex overflow-hidden w-10/12");
-    			add_location(div1, file, 14, 2, 336);
+    			add_location(div1, file, 14, 2, 256);
     			attr_dev(main, "class", "h-screen flex flex-row overflow-hidden w-full");
-    			add_location(main, file, 9, 0, 208);
+    			add_location(main, file, 9, 0, 128);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -69088,7 +69087,7 @@ var app = (function () {
     function instance($$self, $$props, $$invalidate) {
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots("App", slots, []);
-    	let url = "https://uploads.codesandbox.io/uploads/user/788432d2-e404-445a-9edb-09d901099290/8qUO-pdd.pdf";
+    	let url = "/assets/1.pdf";
     	const writable_props = [];
 
     	Object.keys($$props).forEach(key => {

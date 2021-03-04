@@ -1,11 +1,21 @@
 <script>
   import * as pdfjsLib from "pdfjs-dist/build/pdf";
   import pdfWorker from "pdfjs-dist/build/pdf.worker.entry";
-  import * as pdfjsViewer from "pdfjs-dist/web/pdf_viewer";
+  import {
+    PDFViewer,
+    PDFLinkService,
+    PDFFindController,
+    EventBus,
+  } from "pdfjs-dist/web/pdf_viewer";
+  //import * as pdfjsViewer from "pdfjs-dist/web/pdf_viewer";
   import { onMount } from "svelte";
+  import testHighlights from "./testHighlights";
   import "pdfjs-dist/web/pdf_viewer.css";
+  import "style.css";
 
   export let url;
+  let highlights = [];
+
   let containerNode;
   pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
   let pdfDocument;
@@ -19,11 +29,44 @@
 
     ebus.on("textlayerrendered", (evt) => {
       console.log(evt);
-      onDocumentReady();
+      onTextLayerRendered();
     });
   };
 
-  const renderHighlights = () => {};
+  const findOrCreateContainerLayer = (container, className) => {
+    let layer = container.querySelector(`.${className}`);
+
+    if (!layer) {
+      layer = document.createElement("div");
+      layer.className = className;
+      container.appendChild(layer);
+    }
+
+    return layer;
+  };
+
+  const findOrCreateHighlightLayer = (page_number) => {
+    const textLayer = viewer.getPageView(page_number - 1).textLayer;
+
+    if (!textLayer) {
+      return null;
+    }
+
+    return findOrCreateContainerLayer(
+      textLayer.textLayerDiv,
+      "PdfHighlighter__highlight-layer"
+    );
+  };
+
+  const renderHighlights = () => {
+    console.log("renderHighlights");
+    for (let pageNumber = 1; pageNumber <= pdfDocument.numPages; pageNumber++) {
+      const highlightLayer = findOrCreateHighlightLayer(pageNumber);
+      if (highlightLayer) {
+        console.log(highlightLayer);
+      }
+    }
+  };
   const onTextLayerRendered = () => {
     renderHighlights();
   };
@@ -39,7 +82,7 @@
   };
 
   const initviewer = (container, doc, ebus, linksvc, findsvc) => {
-    viewer = new pdfjsViewer.PDFViewer({
+    viewer = new PDFViewer({
       container: container,
       enhanceTextSelection: true,
       removePageBorders: true,
@@ -52,18 +95,20 @@
     linksvc.setViewer(viewer);
 
     // debug
-    window.PdfViewer = this;
+    window.PdfViewer = viewer;
   };
 
   onMount(async () => {
+    highlights = testHighlights[url] ? [...testHighlights[url]] : [];
+    console.log(highlights);
     containerNode = document.querySelector("#viewerContainer");
     pdfDocument = await load_pdf(url);
-    let eventBus = new pdfjsViewer.EventBus();
+    let eventBus = new EventBus();
     setupEventBus(eventBus);
-    let pdfLinkService = new pdfjsViewer.PDFLinkService({
+    let pdfLinkService = new PDFLinkService({
       eventBus,
     });
-    let pdfFindController = new pdfjsViewer.PDFFindController({
+    let pdfFindController = new PDFFindController({
       eventBus,
       linkService: pdfLinkService,
     });

@@ -113,7 +113,7 @@
 
     eventBus.on("pagesinit", function() {
       // We can use pdfViewer now, e.g. let's change default scale.
-      pdfViewer.currentScaleValue = "page-width"; //page-fit
+      pdfViewer.currentScaleValue = ScaleValue;//"page-width"; //page-fit
       // We can try searching for things.
       if (SEARCH_FOR) {
         pdfFindController.executeCommand("find", { query: SEARCH_FOR });

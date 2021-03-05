@@ -3,11 +3,12 @@
   import { onMount } from "svelte";
   import testHighlights from "./testHighlights";
   import "pdfjs-dist/web/pdf_viewer.css";
-  import "style.css";
+  import App from "./App.svelte";
 
   export let url;
   let highlights = testHighlights[url];
   let reader = null;
+
   onMount(async () => {
     reader = new PdfReader("viewerContainer", url, 1.5, 1, highlights);
     await reader.render();

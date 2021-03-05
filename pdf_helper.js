@@ -18,6 +18,7 @@ export default class PdfReader {
     this.highlights = highlights
     this.scale = scale
     this.pageNumber = pageNumber
+    this.scaledHighlights = []
     globalThis.reader = this
   }
 
@@ -53,7 +54,7 @@ export default class PdfReader {
 
     this.EventBus.on('textlayerrendered', (evt) => {
       console.log(evt)
-      this.renderHighlights()
+      this.scaleHighlights()
     })
   }
 
@@ -121,14 +122,14 @@ export default class PdfReader {
     }
   }
 
-  renderHighlights = () => {
+  scaleHighlights = () => {
     console.log('renderHighlights')
     const highlightLayer = this.findOrCreateHighlightLayer()
     if (highlightLayer) {
       let hs = this.highlights[String(this.pageNumber)] || []
       console.log(highlightLayer, hs)
 
-      hs.map((highlight, index) => {
+      this.scaledHighlights = hs.map((highlight, index) => {
         const { position, ...rest } = highlight
 
         const viewportHighlight = {
@@ -137,8 +138,31 @@ export default class PdfReader {
         }
         console.log('highlight', highlight)
         console.log('viewportHighlight', viewportHighlight)
+        this.injectHighlights(viewportHighlight, highlightLayer)
+        return viewportHighlight
       })
     }
+  }
+
+  injectHighlights = (highlight, layer) => {
+    var h = document.createElement('div')
+    h.className = 'Highlight'
+
+    var parts = document.createElement('div')
+    parts.className = 'Highlight__parts'
+
+    highlight.position.rects.map((rect, index) => {
+      let c = document.createElement('div')
+      c.className = 'Highlight__part'
+      c.style.height = `${rect.height}px`
+      c.style.left = `${rect.left}px`
+      c.style.top = `${rect.top}px`
+      c.style.width = `${rect.width}px`
+      parts.appendChild(c)
+    })
+
+    h.appendChild(parts)
+    layer.appendChild(h)
   }
 
   initviewer = () => {

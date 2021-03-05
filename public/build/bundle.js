@@ -68860,6 +68860,7 @@ var app = (function () {
         this.highlights = highlights;
         this.scale = scale;
         this.pageNumber = pageNumber;
+        this.scaledHighlights = [];
         globalThis.reader = this;
       }
 
@@ -68895,7 +68896,7 @@ var app = (function () {
 
         this.EventBus.on('textlayerrendered', (evt) => {
           console.log(evt);
-          this.renderHighlights();
+          this.scaleHighlights();
         });
       }
 
@@ -68963,14 +68964,14 @@ var app = (function () {
         }
       }
 
-      renderHighlights = () => {
+      scaleHighlights = () => {
         console.log('renderHighlights');
         const highlightLayer = this.findOrCreateHighlightLayer();
         if (highlightLayer) {
           let hs = this.highlights[String(this.pageNumber)] || [];
           console.log(highlightLayer, hs);
 
-          hs.map((highlight, index) => {
+          this.scaledHighlights = hs.map((highlight, index) => {
             const { position, ...rest } = highlight;
 
             const viewportHighlight = {
@@ -68979,8 +68980,31 @@ var app = (function () {
             };
             console.log('highlight', highlight);
             console.log('viewportHighlight', viewportHighlight);
+            this.injectHighlights(viewportHighlight, highlightLayer);
+            return viewportHighlight
           });
         }
+      }
+
+      injectHighlights = (highlight, layer) => {
+        var h = document.createElement('div');
+        h.className = 'Highlight';
+
+        var parts = document.createElement('div');
+        parts.className = 'Highlight__parts';
+
+        highlight.position.rects.map((rect, index) => {
+          let c = document.createElement('div');
+          c.className = 'Highlight__part';
+          c.style.height = `${rect.height}px`;
+          c.style.left = `${rect.left}px`;
+          c.style.top = `${rect.top}px`;
+          c.style.width = `${rect.width}px`;
+          parts.appendChild(c);
+        });
+
+        h.appendChild(parts);
+        layer.appendChild(h);
       }
 
       initviewer = () => {
@@ -69147,12 +69171,12 @@ var app = (function () {
     			div0 = element("div");
     			attr_dev(div0, "id", "viewer");
     			attr_dev(div0, "class", "pdfViewer");
-    			add_location(div0, file$2, 18, 4, 518);
+    			add_location(div0, file$2, 19, 4, 531);
     			attr_dev(div1, "class", "w-full svelte-fbmnam");
     			attr_dev(div1, "id", "viewerContainer");
-    			add_location(div1, file$2, 17, 2, 472);
+    			add_location(div1, file$2, 18, 2, 485);
     			attr_dev(div2, "class", "flex flex-col w-full overflow-hidden ");
-    			add_location(div2, file$2, 16, 0, 418);
+    			add_location(div2, file$2, 17, 0, 431);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -69207,6 +69231,7 @@ var app = (function () {
     		PdfReader,
     		onMount,
     		testHighlights,
+    		App,
     		url,
     		highlights,
     		reader

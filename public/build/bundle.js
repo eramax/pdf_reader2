@@ -69019,6 +69019,8 @@ var app = (function () {
           linkService: this.pdfLinkService,
           findController: this.pdfFindController,
           eventBus: this.EventBus,
+          annotationLayerFactory: null,
+          renderer: 'svg',
         });
 
         globalThis.pdfViewer = this.viewer;

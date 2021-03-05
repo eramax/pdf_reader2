@@ -68860,6 +68860,7 @@ var app = (function () {
         this.highlights = highlights;
         this.scale = scale;
         this.pageNumber = pageNumber;
+        globalThis.reader = this;
       }
 
       render = async () => {
@@ -68894,8 +68895,92 @@ var app = (function () {
 
         this.EventBus.on('textlayerrendered', (evt) => {
           console.log(evt);
-          //onTextLayerRendered()
+          this.renderHighlights();
         });
+      }
+
+      findOrCreateContainerLayer = (container, className) => {
+        let layer = container.querySelector(`.${className}`);
+
+        if (!layer) {
+          layer = document.createElement('div');
+          layer.className = className;
+          container.appendChild(layer);
+        }
+
+        return layer
+      }
+
+      findOrCreateHighlightLayer = () => {
+        const textLayer = this.viewer.textLayer;
+
+        if (!textLayer) {
+          return null
+        }
+
+        return this.findOrCreateContainerLayer(
+          textLayer.textLayerDiv,
+          'PdfHighlighter__highlight-layer',
+        )
+      }
+      scaledToViewport = (scaled, viewport, usePdfCoordinates = false) => {
+        const { width, height } = viewport;
+
+        if (usePdfCoordinates) {
+          return pdfToViewport(scaled, viewport)
+        }
+
+        const x1 = (width * scaled.x1) / scaled.width;
+        const y1 = (height * scaled.y1) / scaled.height;
+
+        const x2 = (width * scaled.x2) / scaled.width;
+        const y2 = (height * scaled.y2) / scaled.height;
+
+        return {
+          left: x1,
+          top: y1,
+          width: x2 - x1,
+          height: y2 - y1,
+        }
+      }
+      scaledPositionToViewport = ({
+        pageNumber,
+        boundingRect,
+        rects,
+        usePdfCoordinates,
+      }) => {
+        const viewport = this.viewer.viewport;
+        return {
+          boundingRect: this.scaledToViewport(
+            boundingRect,
+            viewport,
+            usePdfCoordinates,
+          ),
+          rects: (rects || []).map((rect) =>
+            this.scaledToViewport(rect, viewport, usePdfCoordinates),
+          ),
+          pageNumber,
+        }
+      }
+
+      renderHighlights = () => {
+        console.log('renderHighlights');
+        const highlightLayer = this.findOrCreateHighlightLayer();
+        if (highlightLayer) {
+          let hs = this.highlights[String(this.pageNumber)] || [];
+          console.log(highlightLayer, hs);
+
+          hs.map((highlight, index) => {
+            const { position, ...rest } = highlight;
+
+            const viewportHighlight = {
+              position: this.scaledPositionToViewport(position),
+              ...rest,
+            };
+            console.log('highlight', highlight);
+            console.log('viewportHighlight', viewportHighlight);
+          });
+        }
       }
 
       initviewer = () => {
@@ -68923,157 +69008,70 @@ var app = (function () {
     // @flow
 
     const testHighlights = {
-      '/assets/3.pdf': [
-        {
-          content: {
-            text:
-              'ReliabilityThe system should continue to work correctly (performing the correct function atthe desired level of performance) even in',
-          },
-          position: {
-            boundingRect: {
-              x1: 120,
-              y1: 118.69319152832031,
-              x2: 719.8071899414062,
-              y2: 179.99998474121094,
-              width: 839.9999999999999,
-              height: 1102.5,
+      '/assets/3.pdf': {
+        '1': [
+          {
+            content: {
+              text:
+                'We typically think of databases, queues, caches, etc. as being very different categoriesof tools. Although a database and a message queue have some superficial similarity—both store data for some time—they have very different access patterns, which meansdifferent performance characteristics, and thus very different implementations.',
             },
-            rects: [
-              {
-                x1: 120,
-                y1: 118.69319152832031,
-                x2: 190.7296142578125,
-                y2: 137.7841033935547,
-                width: 839.9999999999999,
-                height: 1102.5,
-              },
-              {
-                x1: 149.98583984375,
-                y1: 139.91477966308594,
-                x2: 719.8071899414062,
-                y2: 159.0056915283203,
-                width: 839.9999999999999,
-                height: 1102.5,
-              },
-              {
-                x1: 149.98583984375,
-                y1: 160.9091033935547,
-                x2: 440.06927490234375,
-                y2: 179.99998474121094,
-                width: 839.9999999999999,
-                height: 1102.5,
-              },
-            ],
-            pageNumber: 3,
-          },
-          comment: {
-            text: '',
-            emoji: '🔥',
-          },
-          id: '7817674719005974',
-        },
-        {
-          content: {
-            text: 'application developer, but also a data system designer.',
-          },
-          position: {
-            boundingRect: {
-              x1: 120,
-              y1: 708.7641906738281,
-              x2: 499.27960205078125,
-              y2: 727.8550720214844,
-              width: 839.9999999999999,
-              height: 1102.5,
-            },
-            rects: [
-              {
-                x1: 120,
-                y1: 708.7641906738281,
-                x2: 499.27960205078125,
-                y2: 727.8550720214844,
-                width: 839.9999999999999,
-                height: 1102.5,
-              },
-            ],
-            pageNumber: 2,
-          },
-          comment: {
-            text: '',
-            emoji: '⚠️',
-          },
-          id: '8849891315239256',
-        },
-        {
-          content: {
-            text:
-              'We typically think of databases, queues, caches, etc. as being very different categoriesof tools. Although a database and a message queue have some superficial similarity—both store data for some time—they have very different access patterns, which meansdifferent performance characteristics, and thus very different implementations.',
-          },
-          position: {
-            boundingRect: {
-              x1: 119.98583984375,
-              y1: 504.5880432128906,
-              x2: 720.0054321289062,
-              y2: 586.6760864257812,
-              width: 839.9999999999999,
-              height: 1102.5,
-            },
-            rects: [
-              {
-                x1: 120,
+            position: {
+              boundingRect: {
+                x1: 119.98583984375,
                 y1: 504.5880432128906,
                 x2: 720.0054321289062,
-                y2: 523.678955078125,
-                width: 839.9999999999999,
-                height: 1102.5,
-              },
-              {
-                x1: 120,
-                y1: 525.5823974609375,
-                x2: 719.0502319335938,
-                y2: 544.6732788085938,
-                width: 839.9999999999999,
-                height: 1102.5,
-              },
-              {
-                x1: 119.98583984375,
-                y1: 546.57666015625,
-                x2: 719.9900512695312,
-                y2: 565.6676025390625,
-                width: 839.9999999999999,
-                height: 1102.5,
-              },
-              {
-                x1: 120,
-                y1: 567.585205078125,
-                x2: 673.6132202148438,
                 y2: 586.6760864257812,
                 width: 839.9999999999999,
                 height: 1102.5,
               },
-            ],
-            pageNumber: 1,
-          },
-          comment: {
-            text: '',
-            emoji: '😍',
-          },
-          id: '9565224615171282',
-        },
-        {
-          content: {
-            text: 'search indexes, and s',
-          },
-          position: {
-            boundingRect: {
-              x1: 490.24749755859375,
-              y1: 128.25283813476562,
-              x2: 638.5347290039062,
-              y2: 147.34375,
-              width: 839.9999999999999,
-              height: 1102.5,
+              rects: [
+                {
+                  x1: 120,
+                  y1: 504.5880432128906,
+                  x2: 720.0054321289062,
+                  y2: 523.678955078125,
+                  width: 839.9999999999999,
+                  height: 1102.5,
+                },
+                {
+                  x1: 120,
+                  y1: 525.5823974609375,
+                  x2: 719.0502319335938,
+                  y2: 544.6732788085938,
+                  width: 839.9999999999999,
+                  height: 1102.5,
+                },
+                {
+                  x1: 119.98583984375,
+                  y1: 546.57666015625,
+                  x2: 719.9900512695312,
+                  y2: 565.6676025390625,
+                  width: 839.9999999999999,
+                  height: 1102.5,
+                },
+                {
+                  x1: 120,
+                  y1: 567.585205078125,
+                  x2: 673.6132202148438,
+                  y2: 586.6760864257812,
+                  width: 839.9999999999999,
+                  height: 1102.5,
+                },
+              ],
+              pageNumber: 1,
             },
-            rects: [
-              {
+            comment: {
+              text: '',
+              emoji: '😍',
+            },
+            id: '9565224615171282',
+          },
+          {
+            content: {
+              text: 'search indexes, and s',
+            },
+            position: {
+              boundingRect: {
                 x1: 490.24749755859375,
                 y1: 128.25283813476562,
                 x2: 638.5347290039062,
@@ -69081,30 +69079,30 @@ var app = (function () {
                 width: 839.9999999999999,
                 height: 1102.5,
               },
-            ],
-            pageNumber: 1,
-          },
-          comment: {
-            text: '',
-            emoji: '💩',
-          },
-          id: '9952849898605578',
-        },
-        {
-          content: {
-            text: 'different  applicati',
-          },
-          position: {
-            boundingRect: {
-              x1: 247.14569091796875,
-              y1: 107.24431610107422,
-              x2: 371.67181396484375,
-              y2: 126.33522033691406,
-              width: 839.9999999999999,
-              height: 1102.5,
+              rects: [
+                {
+                  x1: 490.24749755859375,
+                  y1: 128.25283813476562,
+                  x2: 638.5347290039062,
+                  y2: 147.34375,
+                  width: 839.9999999999999,
+                  height: 1102.5,
+                },
+              ],
+              pageNumber: 1,
             },
-            rects: [
-              {
+            comment: {
+              text: '',
+              emoji: '💩',
+            },
+            id: '9952849898605578',
+          },
+          {
+            content: {
+              text: 'different  applicati',
+            },
+            position: {
+              boundingRect: {
                 x1: 247.14569091796875,
                 y1: 107.24431610107422,
                 x2: 371.67181396484375,
@@ -69112,16 +69110,26 @@ var app = (function () {
                 width: 839.9999999999999,
                 height: 1102.5,
               },
-            ],
-            pageNumber: 1,
+              rects: [
+                {
+                  x1: 247.14569091796875,
+                  y1: 107.24431610107422,
+                  x2: 371.67181396484375,
+                  y2: 126.33522033691406,
+                  width: 839.9999999999999,
+                  height: 1102.5,
+                },
+              ],
+              pageNumber: 1,
+            },
+            comment: {
+              text: '',
+              emoji: '',
+            },
+            id: '9496135057862478',
           },
-          comment: {
-            text: '',
-            emoji: '',
-          },
-          id: '9496135057862478',
-        },
-      ],
+        ],
+      },
     };
 
     /* Reader2.svelte generated by Svelte v3.34.0 */
@@ -69139,12 +69147,12 @@ var app = (function () {
     			div0 = element("div");
     			attr_dev(div0, "id", "viewer");
     			attr_dev(div0, "class", "pdfViewer");
-    			add_location(div0, file$2, 18, 4, 513);
+    			add_location(div0, file$2, 18, 4, 518);
     			attr_dev(div1, "class", "w-full svelte-fbmnam");
     			attr_dev(div1, "id", "viewerContainer");
-    			add_location(div1, file$2, 17, 2, 467);
+    			add_location(div1, file$2, 17, 2, 472);
     			attr_dev(div2, "class", "flex flex-col w-full overflow-hidden ");
-    			add_location(div2, file$2, 16, 0, 413);
+    			add_location(div2, file$2, 16, 0, 418);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -69177,7 +69185,7 @@ var app = (function () {
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots("Reader2", slots, []);
     	let { url } = $$props;
-    	let highlights = testHighlights;
+    	let highlights = testHighlights[url];
     	let reader = null;
 
     	onMount(async () => {

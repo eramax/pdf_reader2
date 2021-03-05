@@ -18,6 +18,7 @@ export default class PdfReader {
     this.highlights = highlights
     this.scale = scale
     this.pageNumber = pageNumber
+    globalThis.reader = this
   }
 
   render = async () => {
@@ -52,8 +53,92 @@ export default class PdfReader {
 
     this.EventBus.on('textlayerrendered', (evt) => {
       console.log(evt)
-      //onTextLayerRendered()
+      this.renderHighlights()
     })
+  }
+
+  findOrCreateContainerLayer = (container, className) => {
+    let layer = container.querySelector(`.${className}`)
+
+    if (!layer) {
+      layer = document.createElement('div')
+      layer.className = className
+      container.appendChild(layer)
+    }
+
+    return layer
+  }
+
+  findOrCreateHighlightLayer = () => {
+    const textLayer = this.viewer.textLayer
+
+    if (!textLayer) {
+      return null
+    }
+
+    return this.findOrCreateContainerLayer(
+      textLayer.textLayerDiv,
+      'PdfHighlighter__highlight-layer',
+    )
+  }
+  scaledToViewport = (scaled, viewport, usePdfCoordinates = false) => {
+    const { width, height } = viewport
+
+    if (usePdfCoordinates) {
+      return pdfToViewport(scaled, viewport)
+    }
+
+    const x1 = (width * scaled.x1) / scaled.width
+    const y1 = (height * scaled.y1) / scaled.height
+
+    const x2 = (width * scaled.x2) / scaled.width
+    const y2 = (height * scaled.y2) / scaled.height
+
+    return {
+      left: x1,
+      top: y1,
+      width: x2 - x1,
+      height: y2 - y1,
+    }
+  }
+  scaledPositionToViewport = ({
+    pageNumber,
+    boundingRect,
+    rects,
+    usePdfCoordinates,
+  }) => {
+    const viewport = this.viewer.viewport
+    return {
+      boundingRect: this.scaledToViewport(
+        boundingRect,
+        viewport,
+        usePdfCoordinates,
+      ),
+      rects: (rects || []).map((rect) =>
+        this.scaledToViewport(rect, viewport, usePdfCoordinates),
+      ),
+      pageNumber,
+    }
+  }
+
+  renderHighlights = () => {
+    console.log('renderHighlights')
+    const highlightLayer = this.findOrCreateHighlightLayer()
+    if (highlightLayer) {
+      let hs = this.highlights[String(this.pageNumber)] || []
+      console.log(highlightLayer, hs)
+
+      hs.map((highlight, index) => {
+        const { position, ...rest } = highlight
+
+        const viewportHighlight = {
+          position: this.scaledPositionToViewport(position),
+          ...rest,
+        }
+        console.log('highlight', highlight)
+        console.log('viewportHighlight', viewportHighlight)
+      })
+    }
   }
 
   initviewer = () => {

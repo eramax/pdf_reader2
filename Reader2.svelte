@@ -6,7 +6,7 @@
   import "style.css";
 
   export let url;
-  let highlights = testHighlights;
+  let highlights = testHighlights[url];
   let reader = null;
   onMount(async () => {
     reader = new PdfReader("viewerContainer", url, 1.5, 1, highlights);

@@ -8,6 +8,7 @@
     EventBus,
   } from "pdfjs-dist/web/pdf_viewer";
   //import * as pdfjsViewer from "pdfjs-dist/web/pdf_viewer";
+  import PageHighlightLayer from "./PageHighlightLayer.svelte";
   import { onMount } from "svelte";
   import testHighlights from "./testHighlights";
   import "pdfjs-dist/web/pdf_viewer.css";
@@ -20,6 +21,42 @@
   pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
   let pdfDocument;
   let viewer;
+
+  const scaledToViewport = (scaled, viewport, usePdfCoordinates = false) => {
+    const { width, height } = viewport;
+
+    if (usePdfCoordinates) {
+      return pdfToViewport(scaled, viewport);
+    }
+
+    const x1 = (width * scaled.x1) / scaled.width;
+    const y1 = (height * scaled.y1) / scaled.height;
+
+    const x2 = (width * scaled.x2) / scaled.width;
+    const y2 = (height * scaled.y2) / scaled.height;
+
+    return {
+      left: x1,
+      top: y1,
+      width: x2 - x1,
+      height: y2 - y1,
+    };
+  };
+  const scaledPositionToViewport = (
+    pageNumber,
+    boundingRect,
+    rects,
+    usePdfCoordinates
+  ) => {
+    const viewport = viewer.getPageView(pageNumber - 1).viewport;
+    return {
+      boundingRect: scaledToViewport(boundingRect, viewport, usePdfCoordinates),
+      rects: (rects || []).map((rect) =>
+        scaledToViewport(rect, viewport, usePdfCoordinates)
+      ),
+      pageNumber,
+    };
+  };
 
   const setupEventBus = (ebus) => {
     ebus.on("pagesinit", (evt) => {
@@ -97,6 +134,8 @@
     // debug
     window.PdfViewer = viewer;
   };
+
+  const initHighlights = () => {};
 
   onMount(async () => {
     highlights = testHighlights[url] ? [...testHighlights[url]] : [];

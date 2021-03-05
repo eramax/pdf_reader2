@@ -1,6 +1,6 @@
 <script>
   import Pdf from "./Pdf3.svelte";
-  import Reader from "./Reader.svelte";
+  import Reader from "./Reader2.svelte";
 
   import Sidebar from "./Sidebar.svelte";
 

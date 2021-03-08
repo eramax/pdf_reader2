@@ -6,8 +6,10 @@ import {
   PDFFindController,
   EventBus,
   PDFPageView,
+  PDFSinglePageViewer,
   DefaultTextLayerFactory,
 } from 'pdfjs-dist/web/pdf_viewer'
+import optimizeClientRects from './optimize-client-rects'
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker
 
@@ -34,13 +36,22 @@ export default class PdfReader {
     })
     this.page = await this.load_page(this.pageNumber)
     this.initviewer()
-    this.renderPage()
+    this.setup_viewer()
+    this.registerEventsHandler()
   }
 
   load_pdf = async () => {
     return await pdfjsLib.getDocument({
       url: this.url,
     }).promise
+  }
+
+  setup_viewer = () => {
+    this.viewer.setPdfPage(this.page)
+    this.viewer.draw()
+    //   console.log(this.viewer, this.pdfDocument)
+    //   this.viewer.setDocument(this.pdfDocument)
+    //   this.pdfLinkService.setDocument(this.pdfDocument, null)
   }
 
   load_page = async (id) => {
@@ -53,7 +64,6 @@ export default class PdfReader {
     })
 
     this.EventBus.on('textlayerrendered', (evt) => {
-      console.log(evt)
       this.scaleHighlights()
     })
   }
@@ -123,11 +133,9 @@ export default class PdfReader {
   }
 
   scaleHighlights = () => {
-    console.log('renderHighlights')
     const highlightLayer = this.findOrCreateHighlightLayer()
     if (highlightLayer) {
       let hs = this.highlights[String(this.pageNumber)] || []
-      console.log(highlightLayer, hs)
 
       this.scaledHighlights = hs.map((highlight, index) => {
         const { position, ...rest } = highlight
@@ -136,7 +144,6 @@ export default class PdfReader {
           position: this.scaledPositionToViewport(position),
           ...rest,
         }
-        console.log('highlight', highlight)
         console.log('viewportHighlight', viewportHighlight)
         this.injectHighlights(viewportHighlight, highlightLayer)
         return viewportHighlight
@@ -183,8 +190,116 @@ export default class PdfReader {
 
     globalThis.pdfViewer = this.viewer
   }
-  renderPage = () => {
-    this.viewer.setPdfPage(this.page)
-    this.viewer.draw()
+
+  registerEventsHandler = () => {
+    document.addEventListener('selectionchange', this.onSelectionChange)
+  }
+
+  getPageFromElement = (target) => {
+    const node = target.closest('.page')
+
+    if (!(node instanceof HTMLElement)) {
+      return null
+    }
+
+    const number = Number(node.dataset.pageNumber)
+
+    return { node, number }
+  }
+
+  getPageFromRange = (range) => {
+    const parentElement = range.startContainer.parentElement
+
+    if (!(parentElement instanceof HTMLElement)) {
+      return
+    }
+    return this.getPageFromElement(parentElement)
+  }
+
+  getClientRects = (range, containerEl, shouldOptimize = true) => {
+    let clientRects = Array.from(range.getClientRects())
+
+    const offset = containerEl.getBoundingClientRect()
+
+    const rects = clientRects.map((rect) => {
+      return {
+        top: rect.top + containerEl.scrollTop - offset.top,
+        left: rect.left + containerEl.scrollLeft - offset.left,
+        width: rect.width,
+        height: rect.height,
+      }
+    })
+
+    return shouldOptimize ? optimizeClientRects(rects) : rects
+  }
+
+  getBoundingRect = (clientRects) => {
+    const rects = Array.from(clientRects).map((rect) => {
+      const { left, top, width, height } = rect
+
+      const X0 = left
+      const X1 = left + width
+
+      const Y0 = top
+      const Y1 = top + height
+
+      return { X0, X1, Y0, Y1 }
+    })
+
+    const optimal = rects.reduce((res, rect) => {
+      return {
+        X0: Math.min(res.X0, rect.X0),
+        X1: Math.max(res.X1, rect.X1),
+
+        Y0: Math.min(res.Y0, rect.Y0),
+        Y1: Math.max(res.Y1, rect.Y1),
+      }
+    }, rects[0])
+
+    const { X0, X1, Y0, Y1 } = optimal
+
+    return {
+      left: X0,
+      top: Y0,
+      width: X1 - X0,
+      height: Y1 - Y0,
+    }
+  }
+
+  viewportToScaled = (rect, { width, height }) => {
+    return {
+      x1: rect.left,
+      y1: rect.top,
+
+      x2: rect.left + rect.width,
+      y2: rect.top + rect.height,
+
+      width,
+      height,
+    }
+  }
+
+  viewportPositionToScaled = (boundingRect, rects, pageNumber) => {
+    const viewport = this.viewer.viewport
+    return {
+      boundingRect: this.viewportToScaled(boundingRect, viewport),
+      rects: (rects || []).map((rect) => this.viewportToScaled(rect, viewport)),
+      pageNumber,
+    }
+  }
+  onSelectionChange = (evt) => {
+    const selection = window.getSelection()
+    const range = selection.getRangeAt(0)
+    const content = range.toString()
+    const page = this.getPageFromRange(range)
+    const rects = this.getClientRects(range, page.node)
+    const boundingRect = this.getBoundingRect(rects)
+    const scaledPosition = this.viewportPositionToScaled(
+      boundingRect,
+      rects,
+      this.pageNumber,
+    )
+
+    console.log(content, scaledPosition, rects)
   }
 }

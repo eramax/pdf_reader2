@@ -3,7 +3,6 @@
   import { onMount } from "svelte";
   import testHighlights from "./testHighlights";
   import "pdfjs-dist/web/pdf_viewer.css";
-  import App from "./App.svelte";
 
   export let url;
   let highlights = testHighlights[url];
@@ -24,9 +23,10 @@
 <style>
   #viewerContainer {
     overflow: auto;
-    position: absolute;
+    width: 100vw;
+    /* position: absolute;
     top: 10%;
     width: 83%;
-    height: 80%;
+    height: 80%; */
   }
 </style>

@@ -1,18 +1,16 @@
 <script>
-  import Pdf from "./Pdf3.svelte";
   import Reader from "./Reader2.svelte";
-
-  import Sidebar from "./Sidebar.svelte";
+  import Header from "./Header.svelte";
 
   let url = "/assets/3.pdf";
 </script>
 
-<main class="h-screen flex flex-row overflow-hidden w-full">
-  <div class="w-2/12 overflow-hidden">
-    <Sidebar />
+<main class="h-screen flex flex-col overflow-hidden w-full bg-gray-300">
+  <div class="h-14 pt-2 overflow-hidden bg-gray-500 flex flex-row		">
+    <Header />
   </div>
 
-  <div class="flex-1 flex overflow-hidden w-10/12">
+  <div class="flex-1 flex overflow-hidden w-full">
     <Reader {url} />
   </div>
 </main>

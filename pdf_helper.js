@@ -54,7 +54,9 @@ export default class PdfReader {
 
   setupEventBus = () => {
     this.EventBus.on('pagesinit', (evt) => {
-      this.viewer.currentScaleValue = this.scale
+      const viewport = this.viewer.getPageView(this.pageNumber - 1).viewport
+      const scale = this.containerNode.clientWidth / (viewport.width * 1.03)
+      this.viewer.currentScaleValue = scale
     })
 
     this.EventBus.on('pagerendered', (evt) => {

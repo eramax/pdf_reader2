@@ -24,6 +24,32 @@ export default class PdfReader {
     globalThis.reader = this
   }
 
+  nextPage = () => {
+    if (this.pageNumber < this.viewer.pagesCount) {
+      this.pageNumber++
+      this.viewer.currentPageNumber = this.pageNumber
+      this.hide_annotation()
+    }
+  }
+
+  prevPage = () => {
+    if (this.pageNumber > 1) {
+      this.pageNumber--
+      this.viewer.currentPageNumber = this.pageNumber
+      this.hide_annotation()
+    }
+  }
+
+  zoomIn = () => {
+    this.scale *= 1.1
+    this.viewer.currentScaleValue = this.scale
+  }
+
+  zoomOut = () => {
+    this.scale /= 1.1
+    this.viewer.currentScaleValue = this.scale
+  }
+
   render = async () => {
     this.containerNode = document.getElementById(this.containerId)
     this.pdfDocument = await this.load_pdf()
@@ -55,8 +81,8 @@ export default class PdfReader {
   setupEventBus = () => {
     this.EventBus.on('pagesinit', (evt) => {
       const viewport = this.viewer.getPageView(this.pageNumber - 1).viewport
-      const scale = this.containerNode.clientWidth / (viewport.width * 1.03)
-      this.viewer.currentScaleValue = scale
+      this.scale = this.containerNode.clientWidth / (viewport.width * 1.03)
+      this.viewer.currentScaleValue = this.scale
     })
 
     this.EventBus.on('pagerendered', (evt) => {
@@ -192,12 +218,6 @@ export default class PdfReader {
     globalThis.viewer = this.viewer
   }
 
-  nextPage = () => {
-    this.pageNumber++
-    this.viewer.currentPageNumber = this.pageNumber
-    this.hide_annotation()
-  }
-
   hide_annotation = () => {
     this.viewer.getPageView(this.pageNumber - 1).annotationLayer.hide()
     this.viewer.getPageView(this.pageNumber - 1).annotationLayer.cancel()
@@ -312,7 +332,9 @@ export default class PdfReader {
     if (selection && selection.rangeCount > 0) {
       const range = selection.getRangeAt(0)
       const content = range.toString()
+      if (!content) return
       const page = this.getPageFromRange(range)
+      if (!page) return
       const rects = this.getClientRects(range, page.node)
       const boundingRect = this.getBoundingRect(rects)
       const scaledPosition = this.viewportPositionToScaled(

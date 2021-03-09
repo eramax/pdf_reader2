@@ -2,6 +2,8 @@
   import PdfReader from "./pdf_helper";
   import { onMount } from "svelte";
   import testHighlights from "./testHighlights";
+  import Header from "./Header.svelte";
+
   import "pdfjs-dist/web/pdf_viewer.css";
 
   export let url;

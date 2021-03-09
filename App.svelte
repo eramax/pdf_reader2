@@ -24,6 +24,8 @@
         prev={reader.prevPage}
         zoomin={reader.zoomIn}
         zoomout={reader.zoomOut}
+        highlight={reader.addHighlight}
+        read={reader.read}
       />
     {/if}
   </div>

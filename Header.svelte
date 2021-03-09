@@ -3,6 +3,8 @@
   export let next;
   export let zoomin;
   export let zoomout;
+  export let read;
+  export let highlight;
 </script>
 
 <div class="h-10 overflow-hidden bg-gray-500 flex flex-row text-sm">
@@ -61,12 +63,14 @@
   </button>
 
   <button
+    on:click={read}
     class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded inline-flex items-center mr-4 w-auto"
   >
     Read
   </button>
 
   <button
+    on:click={highlight}
     class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded inline-flex items-center mr-4 w-auto"
   >
     Highlight

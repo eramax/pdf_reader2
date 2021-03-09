@@ -24,6 +24,21 @@ export default class PdfReader {
     globalThis.reader = this
   }
 
+  read = () => {
+    console.log('read')
+  }
+
+  addHighlight = () => {
+    if (!this.currentHighlight) return
+    this.highlights[String(this.pageNumber)] =
+      String(this.pageNumber) in this.highlights
+        ? [...this.highlights[String(this.pageNumber)], this.currentHighlight]
+        : [this.currentHighlight]
+
+    this.currentHighlight = null
+    this.scaleHighlights()
+  }
+
   nextPage = () => {
     if (this.pageNumber < this.viewer.pagesCount) {
       this.pageNumber++
@@ -90,6 +105,7 @@ export default class PdfReader {
     })
 
     this.EventBus.on('textlayerrendered', (evt) => {
+      console.log('textlayerrendered')
       this.scaleHighlights()
     })
   }
@@ -161,9 +177,9 @@ export default class PdfReader {
   scaleHighlights = () => {
     const highlightLayer = this.findOrCreateHighlightLayer()
     if (highlightLayer) {
-      let hs = this.highlights[String(this.pageNumber)] || []
+      let pagehighlights = this.highlights[String(this.pageNumber)] || []
 
-      this.scaledHighlights = hs.map((highlight, index) => {
+      this.scaledHighlights = pagehighlights.map((highlight, index) => {
         const { position, ...rest } = highlight
 
         const viewportHighlight = {
@@ -204,7 +220,6 @@ export default class PdfReader {
       container: this.containerNode,
       id: this.pageNumber,
       scale: this.scale,
-      //defaultViewport: this.page.getViewport({ scale: this.scale }),
       textLayerFactory: new DefaultTextLayerFactory(),
       enhanceTextSelection: true,
       removePageBorders: true,
@@ -343,7 +358,30 @@ export default class PdfReader {
         this.pageNumber,
       )
 
-      console.log(content, scaledPosition, rects)
+      console.log('scaledPosition', scaledPosition)
+
+      const id = new Date().toISOString()
+      this.currentHighlight = {
+        content: {
+          text: content,
+        },
+        position: {
+          boundingRect: boundingRect,
+          rects: rects,
+          pageNumber: this.pageNumber,
+        },
+        comment: {
+          text: '',
+          emoji: '😍',
+        },
+        id: id,
+      }
+
+      JSON.stringify
+      console.log(this.currentHighlight)
+      console.log(JSON.stringify(this.currentHighlight))
+
+      //console.log(content, scaledPosition, rects)
     }
   }
 }

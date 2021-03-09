@@ -122,6 +122,39 @@ const testHighlights = {
         id: '9496135057862478',
       },
     ],
+    '2': [
+      {
+        content: {
+          text:
+            'or  application  programming  interface  (API)  usually  hides  those  implementationdetails  from  clients.',
+        },
+        position: {
+          boundingRect: {
+            left: 234.8000030517578,
+            top: 1182.7000122070312,
+            width: 1173.9666748046875,
+            height: 76.41664123535156,
+          },
+          rects: [
+            {
+              top: 1182.7000122070312,
+              left: 234.8000030517578,
+              width: 1173.9666748046875,
+              height: 35.333343505859375,
+            },
+            {
+              top: 1223.7833251953125,
+              left: 234.8333282470703,
+              width: 278.45001220703125,
+              height: 35.33332824707031,
+            },
+          ],
+          pageNumber: 2,
+        },
+        comment: { text: '', emoji: '😍' },
+        id: '2021-03-09T19:46:01.832Z',
+      },
+    ],
   },
 }
 

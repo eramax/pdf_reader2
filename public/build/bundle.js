@@ -68496,6 +68496,21 @@ var app = (function () {
         globalThis.reader = this;
       }
 
+      read = () => {
+        console.log('read');
+      }
+
+      addHighlight = () => {
+        if (!this.currentHighlight) return
+        this.highlights[String(this.pageNumber)] =
+          String(this.pageNumber) in this.highlights
+            ? [...this.highlights[String(this.pageNumber)], this.currentHighlight]
+            : [this.currentHighlight];
+
+        this.currentHighlight = null;
+        this.scaleHighlights();
+      }
+
       nextPage = () => {
         if (this.pageNumber < this.viewer.pagesCount) {
           this.pageNumber++;
@@ -68562,6 +68577,7 @@ var app = (function () {
         });
 
         this.EventBus.on('textlayerrendered', (evt) => {
+          console.log('textlayerrendered');
           this.scaleHighlights();
         });
       }
@@ -68633,9 +68649,9 @@ var app = (function () {
       scaleHighlights = () => {
         const highlightLayer = this.findOrCreateHighlightLayer();
         if (highlightLayer) {
-          let hs = this.highlights[String(this.pageNumber)] || [];
+          let pagehighlights = this.highlights[String(this.pageNumber)] || [];
 
-          this.scaledHighlights = hs.map((highlight, index) => {
+          this.scaledHighlights = pagehighlights.map((highlight, index) => {
             const { position, ...rest } = highlight;
 
             const viewportHighlight = {
@@ -68676,7 +68692,6 @@ var app = (function () {
           container: this.containerNode,
           id: this.pageNumber,
           scale: this.scale,
-          //defaultViewport: this.page.getViewport({ scale: this.scale }),
           textLayerFactory: new pdf_viewer.DefaultTextLayerFactory(),
           enhanceTextSelection: true,
           removePageBorders: true,
@@ -68815,7 +68830,28 @@ var app = (function () {
             this.pageNumber,
           );
 
-          console.log(content, scaledPosition, rects);
+          console.log('scaledPosition', scaledPosition);
+
+          const id = new Date().toISOString();
+          this.currentHighlight = {
+            content: {
+              text: content,
+            },
+            position: {
+              boundingRect: boundingRect,
+              rects: rects,
+              pageNumber: this.pageNumber,
+            },
+            comment: {
+              text: '',
+              emoji: '😍',
+            },
+            id: id,
+          };
+          console.log(this.currentHighlight);
+          console.log(JSON.stringify(this.currentHighlight));
+
+          //console.log(content, scaledPosition, rects)
         }
       }
     }
@@ -68944,6 +68980,39 @@ var app = (function () {
             id: '9496135057862478',
           },
         ],
+        '2': [
+          {
+            content: {
+              text:
+                'or  application  programming  interface  (API)  usually  hides  those  implementationdetails  from  clients.',
+            },
+            position: {
+              boundingRect: {
+                left: 234.8000030517578,
+                top: 1182.7000122070312,
+                width: 1173.9666748046875,
+                height: 76.41664123535156,
+              },
+              rects: [
+                {
+                  top: 1182.7000122070312,
+                  left: 234.8000030517578,
+                  width: 1173.9666748046875,
+                  height: 35.333343505859375,
+                },
+                {
+                  top: 1223.7833251953125,
+                  left: 234.8333282470703,
+                  width: 278.45001220703125,
+                  height: 35.33332824707031,
+                },
+              ],
+              pageNumber: 2,
+            },
+            comment: { text: '', emoji: '😍' },
+            id: '2021-03-09T19:46:01.832Z',
+          },
+        ],
       },
     };
 
@@ -68998,9 +69067,9 @@ var app = (function () {
     			button5 = element("button");
     			button5.textContent = "Highlight";
     			attr_dev(path, "d", "M481,206.522V95.234l-110.167,41.968c-1.462-35.104-12.774-67.976-32.233-93.272C316.809,15.602,287.474,0,256,0\n\t\t\ts-60.809,15.602-82.6,43.931c-19.459,25.296-30.771,58.168-32.233,93.272L31,95.234v111.288C12.666,215.452,0,234.273,0,256\n\t\t\ts12.666,40.548,31,49.478v121.814L250.614,512h10.771L481,427.292V305.478c18.334-8.93,31-27.751,31-49.478\n\t\t\tS499.334,215.452,481,206.522z M241,476.137L61,406.708v-96.041c27.514-3,49-26.367,49-54.667s-21.486-51.667-49-54.667v-62.568\n\t\t\tl180,68.572V476.137z M451,201.333c-27.514,3-49,26.367-49,54.667s21.486,51.667,49,54.667v96.042l-180,69.428v-268.8l180-68.572\n\t\t\tV201.333z");
-    			add_location(path, file$1, 22, 8, 495);
-    			add_location(g0, file$1, 21, 6, 483);
-    			add_location(g1, file$1, 20, 4, 473);
+    			add_location(path, file$1, 24, 8, 538);
+    			add_location(g0, file$1, 23, 6, 526);
+    			add_location(g1, file$1, 22, 4, 516);
     			attr_dev(svg, "class", "fill-current text-yellow-500 w-16");
     			attr_dev(svg, "version", "1.1");
     			attr_dev(svg, "id", "Capa_1");
@@ -69011,21 +69080,21 @@ var app = (function () {
     			attr_dev(svg, "viewBox", "0 0 512 512");
     			set_style(svg, "enable-background", "new 0 0 512 512");
     			attr_dev(svg, "xml:space", "preserve");
-    			add_location(svg, file$1, 8, 2, 172);
+    			add_location(svg, file$1, 10, 2, 215);
     			attr_dev(button0, "class", "bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded inline-flex items-center mr-4 w-auto");
-    			add_location(button0, file$1, 34, 2, 1165);
+    			add_location(button0, file$1, 36, 2, 1208);
     			attr_dev(button1, "class", "bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded inline-flex items-center mr-4 w-auto");
-    			add_location(button1, file$1, 41, 2, 1342);
+    			add_location(button1, file$1, 43, 2, 1385);
     			attr_dev(button2, "class", "bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded inline-flex items-center mr-4 w-auto");
-    			add_location(button2, file$1, 48, 2, 1519);
+    			add_location(button2, file$1, 50, 2, 1562);
     			attr_dev(button3, "class", "bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded inline-flex items-center mr-4 w-auto");
-    			add_location(button3, file$1, 55, 2, 1701);
+    			add_location(button3, file$1, 57, 2, 1744);
     			attr_dev(button4, "class", "bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded inline-flex items-center mr-4 w-auto");
-    			add_location(button4, file$1, 62, 2, 1885);
+    			add_location(button4, file$1, 64, 2, 1928);
     			attr_dev(button5, "class", "bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded inline-flex items-center mr-4 w-auto");
-    			add_location(button5, file$1, 68, 2, 2042);
+    			add_location(button5, file$1, 71, 2, 2105);
     			attr_dev(div, "class", "h-10 overflow-hidden bg-gray-500 flex flex-row text-sm");
-    			add_location(div, file$1, 7, 0, 101);
+    			add_location(div, file$1, 9, 0, 144);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -69090,6 +69159,26 @@ var app = (function () {
     						false,
     						false,
     						false
+    					),
+    					listen_dev(
+    						button4,
+    						"click",
+    						function () {
+    							if (is_function(/*read*/ ctx[4])) /*read*/ ctx[4].apply(this, arguments);
+    						},
+    						false,
+    						false,
+    						false
+    					),
+    					listen_dev(
+    						button5,
+    						"click",
+    						function () {
+    							if (is_function(/*highlight*/ ctx[5])) /*highlight*/ ctx[5].apply(this, arguments);
+    						},
+    						false,
+    						false,
+    						false
     					)
     				];
 
@@ -69126,7 +69215,9 @@ var app = (function () {
     	let { next } = $$props;
     	let { zoomin } = $$props;
     	let { zoomout } = $$props;
-    	const writable_props = ["prev", "next", "zoomin", "zoomout"];
+    	let { read } = $$props;
+    	let { highlight } = $$props;
+    	const writable_props = ["prev", "next", "zoomin", "zoomout", "read", "highlight"];
 
     	Object.keys($$props).forEach(key => {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<Header> was created with unknown prop '${key}'`);
@@ -69137,28 +69228,47 @@ var app = (function () {
     		if ("next" in $$props) $$invalidate(1, next = $$props.next);
     		if ("zoomin" in $$props) $$invalidate(2, zoomin = $$props.zoomin);
     		if ("zoomout" in $$props) $$invalidate(3, zoomout = $$props.zoomout);
+    		if ("read" in $$props) $$invalidate(4, read = $$props.read);
+    		if ("highlight" in $$props) $$invalidate(5, highlight = $$props.highlight);
     	};
 
-    	$$self.$capture_state = () => ({ prev, next, zoomin, zoomout });
+    	$$self.$capture_state = () => ({
+    		prev,
+    		next,
+    		zoomin,
+    		zoomout,
+    		read,
+    		highlight
+    	});
 
     	$$self.$inject_state = $$props => {
     		if ("prev" in $$props) $$invalidate(0, prev = $$props.prev);
     		if ("next" in $$props) $$invalidate(1, next = $$props.next);
     		if ("zoomin" in $$props) $$invalidate(2, zoomin = $$props.zoomin);
     		if ("zoomout" in $$props) $$invalidate(3, zoomout = $$props.zoomout);
+    		if ("read" in $$props) $$invalidate(4, read = $$props.read);
+    		if ("highlight" in $$props) $$invalidate(5, highlight = $$props.highlight);
     	};
 
     	if ($$props && "$$inject" in $$props) {
     		$$self.$inject_state($$props.$$inject);
     	}
 
-    	return [prev, next, zoomin, zoomout];
+    	return [prev, next, zoomin, zoomout, read, highlight];
     }
 
     class Header extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$1, create_fragment$1, safe_not_equal, { prev: 0, next: 1, zoomin: 2, zoomout: 3 });
+
+    		init(this, options, instance$1, create_fragment$1, safe_not_equal, {
+    			prev: 0,
+    			next: 1,
+    			zoomin: 2,
+    			zoomout: 3,
+    			read: 4,
+    			highlight: 5
+    		});
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
@@ -69184,6 +69294,14 @@ var app = (function () {
 
     		if (/*zoomout*/ ctx[3] === undefined && !("zoomout" in props)) {
     			console.warn("<Header> was created without expected prop 'zoomout'");
+    		}
+
+    		if (/*read*/ ctx[4] === undefined && !("read" in props)) {
+    			console.warn("<Header> was created without expected prop 'read'");
+    		}
+
+    		if (/*highlight*/ ctx[5] === undefined && !("highlight" in props)) {
+    			console.warn("<Header> was created without expected prop 'highlight'");
     		}
     	}
 
@@ -69218,6 +69336,22 @@ var app = (function () {
     	set zoomout(value) {
     		throw new Error("<Header>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
+
+    	get read() {
+    		throw new Error("<Header>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set read(value) {
+    		throw new Error("<Header>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get highlight() {
+    		throw new Error("<Header>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set highlight(value) {
+    		throw new Error("<Header>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
     }
 
     /* App.svelte generated by Svelte v3.34.0 */
@@ -69233,7 +69367,9 @@ var app = (function () {
     				next: /*reader*/ ctx[0].nextPage,
     				prev: /*reader*/ ctx[0].prevPage,
     				zoomin: /*reader*/ ctx[0].zoomIn,
-    				zoomout: /*reader*/ ctx[0].zoomOut
+    				zoomout: /*reader*/ ctx[0].zoomOut,
+    				highlight: /*reader*/ ctx[0].addHighlight,
+    				read: /*reader*/ ctx[0].read
     			},
     			$$inline: true
     		});
@@ -69252,6 +69388,8 @@ var app = (function () {
     			if (dirty & /*reader*/ 1) header_changes.prev = /*reader*/ ctx[0].prevPage;
     			if (dirty & /*reader*/ 1) header_changes.zoomin = /*reader*/ ctx[0].zoomIn;
     			if (dirty & /*reader*/ 1) header_changes.zoomout = /*reader*/ ctx[0].zoomOut;
+    			if (dirty & /*reader*/ 1) header_changes.highlight = /*reader*/ ctx[0].addHighlight;
+    			if (dirty & /*reader*/ 1) header_changes.read = /*reader*/ ctx[0].read;
     			header.$set(header_changes);
     		},
     		i: function intro(local) {
@@ -69304,14 +69442,14 @@ var app = (function () {
     			add_location(div0, file, 19, 2, 517);
     			attr_dev(div1, "id", "viewer");
     			attr_dev(div1, "class", "pdfViewer");
-    			add_location(div1, file, 33, 8, 934);
+    			add_location(div1, file, 35, 8, 1001);
     			attr_dev(div2, "class", "w-full svelte-1jnx80j");
     			attr_dev(div2, "id", "viewerContainer");
-    			add_location(div2, file, 32, 6, 884);
+    			add_location(div2, file, 34, 6, 951);
     			attr_dev(div3, "class", "flex flex-col w-full overflow-hidden ");
-    			add_location(div3, file, 31, 4, 826);
+    			add_location(div3, file, 33, 4, 893);
     			attr_dev(div4, "class", "flex-1 flex overflow-hidden w-full");
-    			add_location(div4, file, 30, 2, 773);
+    			add_location(div4, file, 32, 2, 840);
     			attr_dev(main, "class", "h-screen flex flex-col overflow-hidden w-full bg-gray-300");
     			add_location(main, file, 18, 0, 442);
     		},

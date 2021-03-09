@@ -38,6 +38,7 @@ export default class PdfReader {
     //this.page = await this.load_page(this.pageNumber)
     this.initviewer()
     this.setup_viewer()
+
     this.registerEventsHandler()
   }
 
@@ -54,6 +55,10 @@ export default class PdfReader {
   setupEventBus = () => {
     this.EventBus.on('pagesinit', (evt) => {
       this.viewer.currentScaleValue = this.scale
+    })
+
+    this.EventBus.on('pagerendered', (evt) => {
+      this.hide_annotation()
     })
 
     this.EventBus.on('textlayerrendered', (evt) => {
@@ -182,7 +187,18 @@ export default class PdfReader {
       renderer: 'svg',
     })
 
-    globalThis.pdfViewer = this.viewer
+    globalThis.viewer = this.viewer
+  }
+
+  nextPage = () => {
+    this.pageNumber++
+    this.viewer.currentPageNumber = this.pageNumber
+    this.hide_annotation()
+  }
+
+  hide_annotation = () => {
+    this.viewer.getPageView(this.pageNumber - 1).annotationLayer.hide()
+    this.viewer.getPageView(this.pageNumber - 1).annotationLayer.cancel()
   }
   setup_viewer = () => {
     //this.viewer.setPdfPage(this.page)
@@ -288,19 +304,22 @@ export default class PdfReader {
       pageNumber,
     }
   }
-  onSelectionChange = (evt) => {
-    const selection = window.getSelection()
-    const range = selection.getRangeAt(0)
-    const content = range.toString()
-    const page = this.getPageFromRange(range)
-    const rects = this.getClientRects(range, page.node)
-    const boundingRect = this.getBoundingRect(rects)
-    const scaledPosition = this.viewportPositionToScaled(
-      boundingRect,
-      rects,
-      this.pageNumber,
-    )
 
-    console.log(content, scaledPosition, rects)
+  onSelectionChange = (evt) => {
+    const selection = window.getSelection && window.getSelection()
+    if (selection && selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0)
+      const content = range.toString()
+      const page = this.getPageFromRange(range)
+      const rects = this.getClientRects(range, page.node)
+      const boundingRect = this.getBoundingRect(rects)
+      const scaledPosition = this.viewportPositionToScaled(
+        boundingRect,
+        rects,
+        this.pageNumber,
+      )
+
+      console.log(content, scaledPosition, rects)
+    }
   }
 }

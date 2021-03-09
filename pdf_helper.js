@@ -28,13 +28,14 @@ export default class PdfReader {
     this.containerNode = document.getElementById(this.containerId)
     this.pdfDocument = await this.load_pdf()
     this.EventBus = new EventBus()
+
     this.setupEventBus()
     this.pdfLinkService = new PDFLinkService({ eventBus: this.EventBus })
     this.pdfFindController = new PDFFindController({
       eventBus: this.EventBus,
       linkService: this.pdfLinkService,
     })
-    this.page = await this.load_page(this.pageNumber)
+    //this.page = await this.load_page(this.pageNumber)
     this.initviewer()
     this.setup_viewer()
     this.registerEventsHandler()
@@ -44,14 +45,6 @@ export default class PdfReader {
     return await pdfjsLib.getDocument({
       url: this.url,
     }).promise
-  }
-
-  setup_viewer = () => {
-    this.viewer.setPdfPage(this.page)
-    this.viewer.draw()
-    //   console.log(this.viewer, this.pdfDocument)
-    //   this.viewer.setDocument(this.pdfDocument)
-    //   this.pdfLinkService.setDocument(this.pdfDocument, null)
   }
 
   load_page = async (id) => {
@@ -81,7 +74,7 @@ export default class PdfReader {
   }
 
   findOrCreateHighlightLayer = () => {
-    const textLayer = this.viewer.textLayer
+    const textLayer = this.viewer.getPageView(this.pageNumber - 1).textLayer
 
     if (!textLayer) {
       return null
@@ -118,7 +111,7 @@ export default class PdfReader {
     rects,
     usePdfCoordinates,
   }) => {
-    const viewport = this.viewer.viewport
+    const viewport = this.viewer.getPageView(this.pageNumber - 1).viewport
     return {
       boundingRect: this.scaledToViewport(
         boundingRect,
@@ -144,6 +137,7 @@ export default class PdfReader {
           position: this.scaledPositionToViewport(position),
           ...rest,
         }
+        console.log('highlight', highlight)
         console.log('viewportHighlight', viewportHighlight)
         this.injectHighlights(viewportHighlight, highlightLayer)
         return viewportHighlight
@@ -173,11 +167,11 @@ export default class PdfReader {
   }
 
   initviewer = () => {
-    this.viewer = new PDFPageView({
+    this.viewer = new PDFSinglePageViewer({
       container: this.containerNode,
       id: this.pageNumber,
       scale: this.scale,
-      defaultViewport: this.page.getViewport({ scale: this.scale }),
+      //defaultViewport: this.page.getViewport({ scale: this.scale }),
       textLayerFactory: new DefaultTextLayerFactory(),
       enhanceTextSelection: true,
       removePageBorders: true,
@@ -189,6 +183,13 @@ export default class PdfReader {
     })
 
     globalThis.pdfViewer = this.viewer
+  }
+  setup_viewer = () => {
+    //this.viewer.setPdfPage(this.page)
+    //this.viewer.draw()
+    //   console.log(this.viewer, this.pdfDocument)
+    this.viewer.setDocument(this.pdfDocument)
+    this.pdfLinkService.setDocument(this.pdfDocument, null)
   }
 
   registerEventsHandler = () => {
@@ -280,7 +281,7 @@ export default class PdfReader {
   }
 
   viewportPositionToScaled = (boundingRect, rects, pageNumber) => {
-    const viewport = this.viewer.viewport
+    const viewport = this.viewer.getPageView(this.pageNumber - 1).viewport
     return {
       boundingRect: this.viewportToScaled(boundingRect, viewport),
       rects: (rects || []).map((rect) => this.viewportToScaled(rect, viewport)),

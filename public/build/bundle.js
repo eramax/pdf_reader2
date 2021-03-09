@@ -68946,13 +68946,14 @@ var app = (function () {
         this.containerNode = document.getElementById(this.containerId);
         this.pdfDocument = await this.load_pdf();
         this.EventBus = new pdf_viewer.EventBus();
+
         this.setupEventBus();
         this.pdfLinkService = new pdf_viewer.PDFLinkService({ eventBus: this.EventBus });
         this.pdfFindController = new pdf_viewer.PDFFindController({
           eventBus: this.EventBus,
           linkService: this.pdfLinkService,
         });
-        this.page = await this.load_page(this.pageNumber);
+        //this.page = await this.load_page(this.pageNumber)
         this.initviewer();
         this.setup_viewer();
         this.registerEventsHandler();
@@ -68962,14 +68963,6 @@ var app = (function () {
         return await pdf.getDocument({
           url: this.url,
         }).promise
-      }
-
-      setup_viewer = () => {
-        this.viewer.setPdfPage(this.page);
-        this.viewer.draw();
-        //   console.log(this.viewer, this.pdfDocument)
-        //   this.viewer.setDocument(this.pdfDocument)
-        //   this.pdfLinkService.setDocument(this.pdfDocument, null)
       }
 
       load_page = async (id) => {
@@ -68999,7 +68992,7 @@ var app = (function () {
       }
 
       findOrCreateHighlightLayer = () => {
-        const textLayer = this.viewer.textLayer;
+        const textLayer = this.viewer.getPageView(this.pageNumber - 1).textLayer;
 
         if (!textLayer) {
           return null
@@ -69036,7 +69029,7 @@ var app = (function () {
         rects,
         usePdfCoordinates,
       }) => {
-        const viewport = this.viewer.viewport;
+        const viewport = this.viewer.getPageView(this.pageNumber - 1).viewport;
         return {
           boundingRect: this.scaledToViewport(
             boundingRect,
@@ -69062,6 +69055,7 @@ var app = (function () {
               position: this.scaledPositionToViewport(position),
               ...rest,
             };
+            console.log('highlight', highlight);
             console.log('viewportHighlight', viewportHighlight);
             this.injectHighlights(viewportHighlight, highlightLayer);
             return viewportHighlight
@@ -69091,11 +69085,11 @@ var app = (function () {
       }
 
       initviewer = () => {
-        this.viewer = new pdf_viewer.PDFPageView({
+        this.viewer = new pdf_viewer.PDFSinglePageViewer({
           container: this.containerNode,
           id: this.pageNumber,
           scale: this.scale,
-          defaultViewport: this.page.getViewport({ scale: this.scale }),
+          //defaultViewport: this.page.getViewport({ scale: this.scale }),
           textLayerFactory: new pdf_viewer.DefaultTextLayerFactory(),
           enhanceTextSelection: true,
           removePageBorders: true,
@@ -69107,6 +69101,13 @@ var app = (function () {
         });
 
         globalThis.pdfViewer = this.viewer;
+      }
+      setup_viewer = () => {
+        //this.viewer.setPdfPage(this.page)
+        //this.viewer.draw()
+        //   console.log(this.viewer, this.pdfDocument)
+        this.viewer.setDocument(this.pdfDocument);
+        this.pdfLinkService.setDocument(this.pdfDocument, null);
       }
 
       registerEventsHandler = () => {
@@ -69198,7 +69199,7 @@ var app = (function () {
       }
 
       viewportPositionToScaled = (boundingRect, rects, pageNumber) => {
-        const viewport = this.viewer.viewport;
+        const viewport = this.viewer.getPageView(this.pageNumber - 1).viewport;
         return {
           boundingRect: this.viewportToScaled(boundingRect, viewport),
           rects: (rects || []).map((rect) => this.viewportToScaled(rect, viewport)),

@@ -35,6 +35,7 @@ export default class PdfReader {
         ? [...this.highlights[String(this.pageNumber)], this.currentHighlight]
         : [this.currentHighlight]
 
+    console.log(this.highlights)
     this.currentHighlight = null
     this.scaleHighlights()
   }
@@ -160,6 +161,7 @@ export default class PdfReader {
     rects,
     usePdfCoordinates,
   }) => {
+    console.log('position 1', boundingRect, rects)
     const viewport = this.viewer.getPageView(this.pageNumber - 1).viewport
     return {
       boundingRect: this.scaledToViewport(
@@ -352,6 +354,9 @@ export default class PdfReader {
       if (!page) return
       const rects = this.getClientRects(range, page.node)
       const boundingRect = this.getBoundingRect(rects)
+
+      console.log('boundingRect', boundingRect, rects)
+
       const scaledPosition = this.viewportPositionToScaled(
         boundingRect,
         rects,
@@ -366,8 +371,8 @@ export default class PdfReader {
           text: content,
         },
         position: {
-          boundingRect: boundingRect,
-          rects: rects,
+          boundingRect: scaledPosition.boundingRect,
+          rects: scaledPosition.rects,
           pageNumber: this.pageNumber,
         },
         comment: {

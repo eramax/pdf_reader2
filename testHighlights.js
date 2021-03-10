@@ -5,6 +5,98 @@ const testHighlights = {
     '1': [
       {
         content: {
+          text: 'different  applicati',
+        },
+        position: {
+          boundingRect: {
+            x1: 247.14569091796875,
+            y1: 107.24431610107422,
+            x2: 371.67181396484375,
+            y2: 126.33522033691406,
+            width: 839.9999999999999,
+            height: 1102.5,
+          },
+          rects: [
+            {
+              x1: 247.14569091796875,
+              y1: 107.24431610107422,
+              x2: 371.67181396484375,
+              y2: 126.33522033691406,
+              width: 839.9999999999999,
+              height: 1102.5,
+            },
+          ],
+          pageNumber: 1,
+        },
+        comment: {
+          text: '',
+          emoji: '',
+        },
+        id: '9496135057862478',
+      },
+      {
+        content: { text: 'building an application' },
+        position: {
+          boundingRect: {
+            x1: 107.90000438690186,
+            y1: 133.4250030517578,
+            x2: 254.31696605682373,
+            y2: 151.02500915527344,
+            width: 755.3398058252426,
+            height: 991.383495145631,
+          },
+          rects: [
+            {
+              x1: 107.90000438690186,
+              y1: 133.4250030517578,
+              x2: 254.31696605682373,
+              y2: 151.02500915527344,
+              width: 755.3398058252426,
+              height: 991.383495145631,
+            },
+          ],
+          pageNumber: 1,
+        },
+        comment: { text: '', emoji: '😍' },
+        id: '2021-03-10T19:28:49.734Z',
+      },
+    ],
+    '2': [
+      {
+        content: {
+          text:
+            'or  application  programming  interface  (API)  usually  hides  those  implementationdetails  from  clients.',
+        },
+        position: {
+          boundingRect: {
+            left: 234.8000030517578,
+            top: 1182.7000122070312,
+            width: 1173.9666748046875,
+            height: 76.41664123535156,
+          },
+          rects: [
+            {
+              top: 1182.7000122070312,
+              left: 234.8000030517578,
+              width: 1173.9666748046875,
+              height: 35.333343505859375,
+            },
+            {
+              top: 1223.7833251953125,
+              left: 234.8333282470703,
+              width: 278.45001220703125,
+              height: 35.33332824707031,
+            },
+          ],
+          pageNumber: 2,
+        },
+        comment: { text: '', emoji: '😍' },
+        id: '2021-03-09T19:46:01.832Z',
+      },
+    ],
+    '3': [
+      {
+        content: {
           text:
             'We typically think of databases, queues, caches, etc. as being very different categoriesof tools. Although a database and a message queue have some superficial similarity—both store data for some time—they have very different access patterns, which meansdifferent performance characteristics, and thus very different implementations.',
         },
@@ -89,70 +181,6 @@ const testHighlights = {
           emoji: '💩',
         },
         id: '9952849898605578',
-      },
-      {
-        content: {
-          text: 'different  applicati',
-        },
-        position: {
-          boundingRect: {
-            x1: 247.14569091796875,
-            y1: 107.24431610107422,
-            x2: 371.67181396484375,
-            y2: 126.33522033691406,
-            width: 839.9999999999999,
-            height: 1102.5,
-          },
-          rects: [
-            {
-              x1: 247.14569091796875,
-              y1: 107.24431610107422,
-              x2: 371.67181396484375,
-              y2: 126.33522033691406,
-              width: 839.9999999999999,
-              height: 1102.5,
-            },
-          ],
-          pageNumber: 1,
-        },
-        comment: {
-          text: '',
-          emoji: '',
-        },
-        id: '9496135057862478',
-      },
-    ],
-    '2': [
-      {
-        content: {
-          text:
-            'or  application  programming  interface  (API)  usually  hides  those  implementationdetails  from  clients.',
-        },
-        position: {
-          boundingRect: {
-            left: 234.8000030517578,
-            top: 1182.7000122070312,
-            width: 1173.9666748046875,
-            height: 76.41664123535156,
-          },
-          rects: [
-            {
-              top: 1182.7000122070312,
-              left: 234.8000030517578,
-              width: 1173.9666748046875,
-              height: 35.333343505859375,
-            },
-            {
-              top: 1223.7833251953125,
-              left: 234.8333282470703,
-              width: 278.45001220703125,
-              height: 35.33332824707031,
-            },
-          ],
-          pageNumber: 2,
-        },
-        comment: { text: '', emoji: '😍' },
-        id: '2021-03-09T19:46:01.832Z',
       },
     ],
   },

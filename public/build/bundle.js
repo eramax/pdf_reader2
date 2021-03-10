@@ -68501,13 +68501,47 @@ var app = (function () {
       }
 
       addHighlight = () => {
+        const selection = window.getSelection && window.getSelection();
+        if (selection && selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+          const content = range.toString();
+          if (!content) return
+          const page = this.getPageFromRange(range);
+          if (!page) return
+          const rects = this.getClientRects(range, page.node);
+          const boundingRect = this.getBoundingRect(rects);
+
+          const scaledPosition = this.viewportPositionToScaled(
+            boundingRect,
+            rects,
+            this.pageNumber,
+          );
+
+          const id = new Date().toISOString();
+          this.currentHighlight = {
+            content: {
+              text: content,
+            },
+            position: {
+              boundingRect: scaledPosition.boundingRect,
+              rects: scaledPosition.rects,
+              pageNumber: this.pageNumber,
+            },
+            comment: {
+              text: '',
+              emoji: '😍',
+            },
+            id: id,
+          };
+        }
+        console.log(JSON.stringify(this.currentHighlight));
+
         if (!this.currentHighlight) return
         this.highlights[String(this.pageNumber)] =
           String(this.pageNumber) in this.highlights
             ? [...this.highlights[String(this.pageNumber)], this.currentHighlight]
             : [this.currentHighlight];
 
-        console.log(this.highlights);
         this.currentHighlight = null;
         this.scaleHighlights();
       }
@@ -68517,6 +68551,7 @@ var app = (function () {
           this.pageNumber++;
           this.viewer.currentPageNumber = this.pageNumber;
           this.hide_annotation();
+          this.scaleHighlights();
         }
       }
 
@@ -68525,6 +68560,7 @@ var app = (function () {
           this.pageNumber--;
           this.viewer.currentPageNumber = this.pageNumber;
           this.hide_annotation();
+          this.scaleHighlights();
         }
       }
 
@@ -68574,6 +68610,7 @@ var app = (function () {
         });
 
         this.EventBus.on('pagerendered', (evt) => {
+          console.log('pagerendered');
           this.hide_annotation();
         });
 
@@ -68581,6 +68618,45 @@ var app = (function () {
           console.log('textlayerrendered');
           this.scaleHighlights();
         });
+
+        //  eventBus._on("resize", webViewerResize);
+        // eventBus._on("hashchange", webViewerHashchange);
+        // eventBus._on("beforeprint", _boundEvents.beforePrint);
+        // eventBus._on("afterprint", _boundEvents.afterPrint);
+        // eventBus._on("pagerendered", webViewerPageRendered);
+        // eventBus._on("updateviewarea", webViewerUpdateViewarea);
+        // eventBus._on("pagechanging", webViewerPageChanging);
+        // eventBus._on("scalechanging", webViewerScaleChanging);
+        // eventBus._on("rotationchanging", webViewerRotationChanging);
+        // eventBus._on("sidebarviewchanged", webViewerSidebarViewChanged);
+        // eventBus._on("pagemode", webViewerPageMode);
+        // eventBus._on("namedaction", webViewerNamedAction);
+        // eventBus._on("presentationmodechanged", webViewerPresentationModeChanged);
+        // eventBus._on("presentationmode", webViewerPresentationMode);
+        // eventBus._on("print", webViewerPrint);
+        // eventBus._on("download", webViewerDownload);
+        // eventBus._on("save", webViewerSave);
+        // eventBus._on("firstpage", webViewerFirstPage);
+        // eventBus._on("lastpage", webViewerLastPage);
+        // eventBus._on("nextpage", webViewerNextPage);
+        // eventBus._on("previouspage", webViewerPreviousPage);
+        // eventBus._on("zoomin", webViewerZoomIn);
+        // eventBus._on("zoomout", webViewerZoomOut);
+        // eventBus._on("zoomreset", webViewerZoomReset);
+        // eventBus._on("pagenumberchanged", webViewerPageNumberChanged);
+        // eventBus._on("scalechanged", webViewerScaleChanged);
+        // eventBus._on("rotatecw", webViewerRotateCw);
+        // eventBus._on("rotateccw", webViewerRotateCcw);
+        // eventBus._on("optionalcontentconfig", webViewerOptionalContentConfig);
+        // eventBus._on("switchscrollmode", webViewerSwitchScrollMode);
+        // eventBus._on("scrollmodechanged", webViewerScrollModeChanged);
+        // eventBus._on("switchspreadmode", webViewerSwitchSpreadMode);
+        // eventBus._on("spreadmodechanged", webViewerSpreadModeChanged);
+        // eventBus._on("documentproperties", webViewerDocumentProperties);
+        // eventBus._on("find", webViewerFind);
+        // eventBus._on("findfromurlhash", webViewerFindFromUrlHash);
+        // eventBus._on("updatefindmatchescount", webViewerUpdateFindMatchesCount);
+        // eventBus._on("updatefindcontrolstate", webViewerUpdateFindControlState);
       }
 
       findOrCreateContainerLayer = (container, className) => {
@@ -68633,7 +68709,6 @@ var app = (function () {
         rects,
         usePdfCoordinates,
       }) => {
-        console.log('position 1', boundingRect, rects);
         const viewport = this.viewer.getPageView(this.pageNumber - 1).viewport;
         return {
           boundingRect: this.scaledToViewport(
@@ -68651,6 +68726,7 @@ var app = (function () {
       scaleHighlights = () => {
         const highlightLayer = this.findOrCreateHighlightLayer();
         if (highlightLayer) {
+          console.log(`Load page ${this.pageNumber}`);
           let pagehighlights = this.highlights[String(this.pageNumber)] || [];
 
           this.scaledHighlights = pagehighlights.map((highlight, index) => {
@@ -68660,8 +68736,6 @@ var app = (function () {
               position: this.scaledPositionToViewport(position),
               ...rest,
             };
-            console.log('highlight', highlight);
-            console.log('viewportHighlight', viewportHighlight);
             this.injectHighlights(viewportHighlight, highlightLayer);
             return viewportHighlight
           });
@@ -68712,9 +68786,6 @@ var app = (function () {
         this.viewer.getPageView(this.pageNumber - 1).annotationLayer.cancel();
       }
       setup_viewer = () => {
-        //this.viewer.setPdfPage(this.page)
-        //this.viewer.draw()
-        //   console.log(this.viewer, this.pdfDocument)
         this.viewer.setDocument(this.pdfDocument);
         this.pdfLinkService.setDocument(this.pdfDocument, null);
       }
@@ -68816,49 +68887,7 @@ var app = (function () {
         }
       }
 
-      onSelectionChange = (evt) => {
-        const selection = window.getSelection && window.getSelection();
-        if (selection && selection.rangeCount > 0) {
-          const range = selection.getRangeAt(0);
-          const content = range.toString();
-          if (!content) return
-          const page = this.getPageFromRange(range);
-          if (!page) return
-          const rects = this.getClientRects(range, page.node);
-          const boundingRect = this.getBoundingRect(rects);
-
-          console.log('boundingRect', boundingRect, rects);
-
-          const scaledPosition = this.viewportPositionToScaled(
-            boundingRect,
-            rects,
-            this.pageNumber,
-          );
-
-          console.log('scaledPosition', scaledPosition);
-
-          const id = new Date().toISOString();
-          this.currentHighlight = {
-            content: {
-              text: content,
-            },
-            position: {
-              boundingRect: scaledPosition.boundingRect,
-              rects: scaledPosition.rects,
-              pageNumber: this.pageNumber,
-            },
-            comment: {
-              text: '',
-              emoji: '😍',
-            },
-            id: id,
-          };
-          console.log(this.currentHighlight);
-          console.log(JSON.stringify(this.currentHighlight));
-
-          //console.log(content, scaledPosition, rects)
-        }
-      }
+      onSelectionChange = (evt) => {}
     }
 
     // @flow
@@ -68928,122 +68957,147 @@ var app = (function () {
           {
             content: {
               text:
-                'or  application  programming  interface  (API)  usually  hides  those  implementationdetails  from  clients.',
+                'from  clients.  Now  you  have  essentially  created  a  new,  special-purpose  datasystem from smaller, general-purpose components. Your composite data system mayprovide  certain  guarantees:  e',
             },
             position: {
               boundingRect: {
-                left: 234.8000030517578,
-                top: 1182.7000122070312,
-                width: 1173.9666748046875,
-                height: 76.41664123535156,
+                x1: 107.90000438690186,
+                y1: 561.0125122070312,
+                x2: 647.6559171676636,
+                y2: 616.3875122070312,
+                width: 755.3398058252426,
+                height: 991.383495145631,
               },
               rects: [
                 {
-                  top: 1182.7000122070312,
-                  left: 234.8000030517578,
-                  width: 1173.9666748046875,
-                  height: 35.333343505859375,
+                  x1: 155.07315349578857,
+                  y1: 561.0125122070312,
+                  x2: 647.6559171676636,
+                  y2: 578.6125183105469,
+                  width: 755.3398058252426,
+                  height: 991.383495145631,
                 },
                 {
-                  top: 1223.7833251953125,
-                  left: 234.8333282470703,
-                  width: 278.45001220703125,
-                  height: 35.33332824707031,
+                  x1: 107.90000438690186,
+                  y1: 579.8999938964844,
+                  x2: 647.0585126876831,
+                  y2: 597.5,
+                  width: 755.3398058252426,
+                  height: 991.383495145631,
+                },
+                {
+                  x1: 107.90000438690186,
+                  y1: 598.7875061035156,
+                  x2: 288.76706981658936,
+                  y2: 616.3875122070312,
+                  width: 755.3398058252426,
+                  height: 991.383495145631,
                 },
               ],
               pageNumber: 2,
             },
             comment: { text: '', emoji: '😍' },
-            id: '2021-03-09T19:46:01.832Z',
+            id: '2021-03-10T19:36:24.493Z',
           },
         ],
         '3': [
           {
             content: {
               text:
-                'We typically think of databases, queues, caches, etc. as being very different categoriesof tools. Although a database and a message queue have some superficial similarity—both store data for some time—they have very different access patterns, which meansdifferent performance characteristics, and thus very different implementations.',
+                'These words are often cast around without a clear understanding of what they mean.In  the  interest  of  thoughtful  engineering,  we  will  spend  the  rest  of  this  chapterexploring ways of thinking about reliability, scalability, and maintainability. Then, inthe  following  chapters,  we  will  look  at  various  techniques,  architectures,  and  algo‐rithms that are used in order to achieve those goals.',
             },
             position: {
               boundingRect: {
-                x1: 119.98583984375,
-                y1: 504.5880432128906,
-                x2: 720.0054321289062,
-                y2: 586.6760864257812,
-                width: 839.9999999999999,
-                height: 1102.5,
+                x1: 107.90000438690186,
+                y1: 362.7249984741211,
+                x2: 647.6489667892456,
+                y2: 455.86251068115234,
+                width: 755.3398058252426,
+                height: 991.383495145631,
               },
               rects: [
                 {
-                  x1: 120,
-                  y1: 504.5880432128906,
-                  x2: 720.0054321289062,
-                  y2: 523.678955078125,
-                  width: 839.9999999999999,
-                  height: 1102.5,
+                  x1: 107.90000438690186,
+                  y1: 362.7249984741211,
+                  x2: 647.6460981369019,
+                  y2: 380.3250045776367,
+                  width: 755.3398058252426,
+                  height: 991.383495145631,
                 },
                 {
-                  x1: 120,
-                  y1: 525.5823974609375,
-                  x2: 719.0502319335938,
-                  y2: 544.6732788085938,
-                  width: 839.9999999999999,
-                  height: 1102.5,
+                  x1: 107.90000438690186,
+                  y1: 381.61251068115234,
+                  x2: 647.6489667892456,
+                  y2: 399.21251678466797,
+                  width: 755.3398058252426,
+                  height: 991.383495145631,
                 },
                 {
-                  x1: 119.98583984375,
-                  y1: 546.57666015625,
-                  x2: 719.9900512695312,
-                  y2: 565.6676025390625,
-                  width: 839.9999999999999,
-                  height: 1102.5,
+                  x1: 107.90000438690186,
+                  y1: 400.48751068115234,
+                  x2: 647.3574018478394,
+                  y2: 418.08751678466797,
+                  width: 755.3398058252426,
+                  height: 991.383495145631,
                 },
                 {
-                  x1: 120,
-                  y1: 567.585205078125,
-                  x2: 673.6132202148438,
-                  y2: 586.6760864257812,
-                  width: 839.9999999999999,
-                  height: 1102.5,
+                  x1: 107.90000438690186,
+                  y1: 419.37499237060547,
+                  x2: 647.6478071212769,
+                  y2: 436.9749984741211,
+                  width: 755.3398058252426,
+                  height: 991.383495145631,
+                },
+                {
+                  x1: 107.91250133514404,
+                  y1: 438.2625045776367,
+                  x2: 432.12563610076904,
+                  y2: 455.86251068115234,
+                  width: 755.3398058252426,
+                  height: 991.383495145631,
                 },
               ],
-              pageNumber: 1,
+              pageNumber: 3,
             },
-            comment: {
-              text: '',
-              emoji: '😍',
-            },
-            id: '9565224615171282',
+            comment: { text: '', emoji: '😍' },
+            id: '2021-03-10T19:36:49.909Z',
           },
           {
             content: {
-              text: 'search indexes, and s',
+              text:
+                'The things that can go wrong are called faults, and systems that anticipate faults andcan  cope  with  them  are  called  fault-tolerant  or  resilient.',
             },
             position: {
               boundingRect: {
-                x1: 490.24749755859375,
-                y1: 128.25283813476562,
-                x2: 638.5347290039062,
-                y2: 147.34375,
-                width: 839.9999999999999,
-                height: 1102.5,
+                x1: 107.90000438690186,
+                y1: 777.8625335693359,
+                x2: 647.5500974655151,
+                y2: 814.3500213623047,
+                width: 755.3398058252426,
+                height: 991.383495145631,
               },
               rects: [
                 {
-                  x1: 490.24749755859375,
-                  y1: 128.25283813476562,
-                  x2: 638.5347290039062,
-                  y2: 147.34375,
-                  width: 839.9999999999999,
-                  height: 1102.5,
+                  x1: 107.90000438690186,
+                  y1: 777.8625335693359,
+                  x2: 647.5500974655151,
+                  y2: 795.4625091552734,
+                  width: 755.3398058252426,
+                  height: 991.383495145631,
+                },
+                {
+                  x1: 107.90000438690186,
+                  y1: 796.7500457763672,
+                  x2: 467.5091428756714,
+                  y2: 814.3500213623047,
+                  width: 755.3398058252426,
+                  height: 991.383495145631,
                 },
               ],
-              pageNumber: 1,
+              pageNumber: 3,
             },
-            comment: {
-              text: '',
-              emoji: '💩',
-            },
-            id: '9952849898605578',
+            comment: { text: '', emoji: '😍' },
+            id: '2021-03-10T19:37:32.986Z',
           },
         ],
       },

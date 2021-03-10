@@ -29,13 +29,47 @@ export default class PdfReader {
   }
 
   addHighlight = () => {
+    const selection = window.getSelection && window.getSelection()
+    if (selection && selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0)
+      const content = range.toString()
+      if (!content) return
+      const page = this.getPageFromRange(range)
+      if (!page) return
+      const rects = this.getClientRects(range, page.node)
+      const boundingRect = this.getBoundingRect(rects)
+
+      const scaledPosition = this.viewportPositionToScaled(
+        boundingRect,
+        rects,
+        this.pageNumber,
+      )
+
+      const id = new Date().toISOString()
+      this.currentHighlight = {
+        content: {
+          text: content,
+        },
+        position: {
+          boundingRect: scaledPosition.boundingRect,
+          rects: scaledPosition.rects,
+          pageNumber: this.pageNumber,
+        },
+        comment: {
+          text: '',
+          emoji: '😍',
+        },
+        id: id,
+      }
+    }
+    console.log(JSON.stringify(this.currentHighlight))
+
     if (!this.currentHighlight) return
     this.highlights[String(this.pageNumber)] =
       String(this.pageNumber) in this.highlights
         ? [...this.highlights[String(this.pageNumber)], this.currentHighlight]
         : [this.currentHighlight]
 
-    console.log(this.highlights)
     this.currentHighlight = null
     this.scaleHighlights()
   }
@@ -45,6 +79,7 @@ export default class PdfReader {
       this.pageNumber++
       this.viewer.currentPageNumber = this.pageNumber
       this.hide_annotation()
+      this.scaleHighlights()
     }
   }
 
@@ -53,6 +88,7 @@ export default class PdfReader {
       this.pageNumber--
       this.viewer.currentPageNumber = this.pageNumber
       this.hide_annotation()
+      this.scaleHighlights()
     }
   }
 
@@ -102,6 +138,7 @@ export default class PdfReader {
     })
 
     this.EventBus.on('pagerendered', (evt) => {
+      console.log('pagerendered')
       this.hide_annotation()
     })
 
@@ -109,6 +146,45 @@ export default class PdfReader {
       console.log('textlayerrendered')
       this.scaleHighlights()
     })
+
+    //  eventBus._on("resize", webViewerResize);
+    // eventBus._on("hashchange", webViewerHashchange);
+    // eventBus._on("beforeprint", _boundEvents.beforePrint);
+    // eventBus._on("afterprint", _boundEvents.afterPrint);
+    // eventBus._on("pagerendered", webViewerPageRendered);
+    // eventBus._on("updateviewarea", webViewerUpdateViewarea);
+    // eventBus._on("pagechanging", webViewerPageChanging);
+    // eventBus._on("scalechanging", webViewerScaleChanging);
+    // eventBus._on("rotationchanging", webViewerRotationChanging);
+    // eventBus._on("sidebarviewchanged", webViewerSidebarViewChanged);
+    // eventBus._on("pagemode", webViewerPageMode);
+    // eventBus._on("namedaction", webViewerNamedAction);
+    // eventBus._on("presentationmodechanged", webViewerPresentationModeChanged);
+    // eventBus._on("presentationmode", webViewerPresentationMode);
+    // eventBus._on("print", webViewerPrint);
+    // eventBus._on("download", webViewerDownload);
+    // eventBus._on("save", webViewerSave);
+    // eventBus._on("firstpage", webViewerFirstPage);
+    // eventBus._on("lastpage", webViewerLastPage);
+    // eventBus._on("nextpage", webViewerNextPage);
+    // eventBus._on("previouspage", webViewerPreviousPage);
+    // eventBus._on("zoomin", webViewerZoomIn);
+    // eventBus._on("zoomout", webViewerZoomOut);
+    // eventBus._on("zoomreset", webViewerZoomReset);
+    // eventBus._on("pagenumberchanged", webViewerPageNumberChanged);
+    // eventBus._on("scalechanged", webViewerScaleChanged);
+    // eventBus._on("rotatecw", webViewerRotateCw);
+    // eventBus._on("rotateccw", webViewerRotateCcw);
+    // eventBus._on("optionalcontentconfig", webViewerOptionalContentConfig);
+    // eventBus._on("switchscrollmode", webViewerSwitchScrollMode);
+    // eventBus._on("scrollmodechanged", webViewerScrollModeChanged);
+    // eventBus._on("switchspreadmode", webViewerSwitchSpreadMode);
+    // eventBus._on("spreadmodechanged", webViewerSpreadModeChanged);
+    // eventBus._on("documentproperties", webViewerDocumentProperties);
+    // eventBus._on("find", webViewerFind);
+    // eventBus._on("findfromurlhash", webViewerFindFromUrlHash);
+    // eventBus._on("updatefindmatchescount", webViewerUpdateFindMatchesCount);
+    // eventBus._on("updatefindcontrolstate", webViewerUpdateFindControlState);
   }
 
   findOrCreateContainerLayer = (container, className) => {
@@ -161,7 +237,6 @@ export default class PdfReader {
     rects,
     usePdfCoordinates,
   }) => {
-    console.log('position 1', boundingRect, rects)
     const viewport = this.viewer.getPageView(this.pageNumber - 1).viewport
     return {
       boundingRect: this.scaledToViewport(
@@ -179,6 +254,7 @@ export default class PdfReader {
   scaleHighlights = () => {
     const highlightLayer = this.findOrCreateHighlightLayer()
     if (highlightLayer) {
+      console.log(`Load page ${this.pageNumber}`)
       let pagehighlights = this.highlights[String(this.pageNumber)] || []
 
       this.scaledHighlights = pagehighlights.map((highlight, index) => {
@@ -188,8 +264,6 @@ export default class PdfReader {
           position: this.scaledPositionToViewport(position),
           ...rest,
         }
-        console.log('highlight', highlight)
-        console.log('viewportHighlight', viewportHighlight)
         this.injectHighlights(viewportHighlight, highlightLayer)
         return viewportHighlight
       })
@@ -240,9 +314,6 @@ export default class PdfReader {
     this.viewer.getPageView(this.pageNumber - 1).annotationLayer.cancel()
   }
   setup_viewer = () => {
-    //this.viewer.setPdfPage(this.page)
-    //this.viewer.draw()
-    //   console.log(this.viewer, this.pdfDocument)
     this.viewer.setDocument(this.pdfDocument)
     this.pdfLinkService.setDocument(this.pdfDocument, null)
   }
@@ -344,49 +415,5 @@ export default class PdfReader {
     }
   }
 
-  onSelectionChange = (evt) => {
-    const selection = window.getSelection && window.getSelection()
-    if (selection && selection.rangeCount > 0) {
-      const range = selection.getRangeAt(0)
-      const content = range.toString()
-      if (!content) return
-      const page = this.getPageFromRange(range)
-      if (!page) return
-      const rects = this.getClientRects(range, page.node)
-      const boundingRect = this.getBoundingRect(rects)
-
-      console.log('boundingRect', boundingRect, rects)
-
-      const scaledPosition = this.viewportPositionToScaled(
-        boundingRect,
-        rects,
-        this.pageNumber,
-      )
-
-      console.log('scaledPosition', scaledPosition)
-
-      const id = new Date().toISOString()
-      this.currentHighlight = {
-        content: {
-          text: content,
-        },
-        position: {
-          boundingRect: scaledPosition.boundingRect,
-          rects: scaledPosition.rects,
-          pageNumber: this.pageNumber,
-        },
-        comment: {
-          text: '',
-          emoji: '😍',
-        },
-        id: id,
-      }
-
-      JSON.stringify
-      console.log(this.currentHighlight)
-      console.log(JSON.stringify(this.currentHighlight))
-
-      //console.log(content, scaledPosition, rects)
-    }
-  }
+  onSelectionChange = (evt) => {}
 }

@@ -68492,7 +68492,7 @@ var app = (function () {
         this.highlights = highlights;
         this.scale = scale;
         this.pageNumber = pageNumber;
-        this.scaledHighlights = [];
+        this.renderedHighlights = [];
         globalThis.reader = this;
       }
 
@@ -68543,7 +68543,7 @@ var app = (function () {
             : [this.currentHighlight];
 
         this.currentHighlight = null;
-        this.scaleHighlights();
+        this.renderHighlights();
       }
 
       nextPage = () => {
@@ -68551,7 +68551,7 @@ var app = (function () {
           this.pageNumber++;
           this.viewer.currentPageNumber = this.pageNumber;
           this.hide_annotation();
-          this.scaleHighlights();
+          this.renderHighlights();
         }
       }
 
@@ -68560,7 +68560,7 @@ var app = (function () {
           this.pageNumber--;
           this.viewer.currentPageNumber = this.pageNumber;
           this.hide_annotation();
-          this.scaleHighlights();
+          this.renderHighlights();
         }
       }
 
@@ -68612,11 +68612,18 @@ var app = (function () {
         this.EventBus.on('pagerendered', (evt) => {
           console.log('pagerendered');
           this.hide_annotation();
+
+          // const arrClass = document.querySelectorAll('.Highlight__part')
+          // for (let i of arrClass) {
+          //   i.addEventListener('click', (e) => {
+          //     console.log('Perfrom Action', e.target)
+          //   })
+          // }
         });
 
         this.EventBus.on('textlayerrendered', (evt) => {
           console.log('textlayerrendered');
-          this.scaleHighlights();
+          this.renderHighlights();
         });
 
         //  eventBus._on("resize", webViewerResize);
@@ -68683,11 +68690,29 @@ var app = (function () {
           'PdfHighlighter__highlight-layer',
         )
       }
+
+      pdfToViewport = (pdf, viewport) => {
+        const [x1, y1, x2, y2] = viewport.convertToViewportRectangle([
+          pdf.x1,
+          pdf.y1,
+          pdf.x2,
+          pdf.y2,
+        ]);
+
+        return {
+          left: x1,
+          top: y1,
+
+          width: x2 - x1,
+          height: y1 - y2,
+        }
+      }
+
       scaledToViewport = (scaled, viewport, usePdfCoordinates = false) => {
         const { width, height } = viewport;
 
         if (usePdfCoordinates) {
-          return pdfToViewport(scaled, viewport)
+          return this.pdfToViewport(scaled, viewport)
         }
 
         const x1 = (width * scaled.x1) / scaled.width;
@@ -68723,22 +68748,27 @@ var app = (function () {
         }
       }
 
-      scaleHighlights = () => {
+      renderHighlights = () => {
         const highlightLayer = this.findOrCreateHighlightLayer();
         if (highlightLayer) {
           console.log(`Load page ${this.pageNumber}`);
           let pagehighlights = this.highlights[String(this.pageNumber)] || [];
 
-          this.scaledHighlights = pagehighlights.map((highlight, index) => {
-            const { position, ...rest } = highlight;
+          pagehighlights
+            .filter((h) => !this.renderedHighlights.includes(h.id))
+            .map((highlight) => {
+              //debugger
+              console.log(`Highlight ${highlight.id}`);
+              const { position, ...rest } = highlight;
 
-            const viewportHighlight = {
-              position: this.scaledPositionToViewport(position),
-              ...rest,
-            };
-            this.injectHighlights(viewportHighlight, highlightLayer);
-            return viewportHighlight
-          });
+              const viewportHighlight = {
+                position: this.scaledPositionToViewport(position),
+                ...rest,
+              };
+              this.injectHighlights(viewportHighlight, highlightLayer);
+
+              this.renderedHighlights.push(highlight.id);
+            });
         }
       }
 
@@ -68756,6 +68786,9 @@ var app = (function () {
           c.style.left = `${rect.left}px`;
           c.style.top = `${rect.top}px`;
           c.style.width = `${rect.width}px`;
+          c.addEventListener('click', (e) => {
+            console.log('Perfrom Action', highlight.id);
+          });
           parts.appendChild(c);
         });
 
@@ -68782,8 +68815,10 @@ var app = (function () {
       }
 
       hide_annotation = () => {
-        this.viewer.getPageView(this.pageNumber - 1).annotationLayer.hide();
-        this.viewer.getPageView(this.pageNumber - 1).annotationLayer.cancel();
+        if (this.viewer.getPageView(this.pageNumber - 1).annotationLayer) {
+          this.viewer.getPageView(this.pageNumber - 1).annotationLayer.hide();
+          this.viewer.getPageView(this.pageNumber - 1).annotationLayer.cancel();
+        }
       }
       setup_viewer = () => {
         this.viewer.setDocument(this.pdfDocument);
